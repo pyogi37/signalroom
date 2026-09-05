@@ -137,7 +137,11 @@ def _live(system: str, user: str, schema: type[T], stage: str, key: str, tempera
             f"Stage '{stage}' needs a model. Set GROQ_API_KEY (or SIGNALROOM_MODEL_API_KEY) in apps/api/.env, "
             "or open a room that has recorded model output."
         )
-    client = OpenAI(api_key=api_key(), base_url=base_url(), timeout=90.0, max_retries=2)
+    client = OpenAI(api_key=api_key(), base_url=base_url(), timeout=120.0, max_retries=2)
+    extra_body: dict = {}
+    if "openrouter.ai" in base_url():
+        # Only route to providers that honour every parameter we send, including the JSON schema.
+        extra_body["provider"] = {"require_parameters": True}
     started = perf_counter()
     try:
         completion = client.chat.completions.parse(
@@ -145,7 +149,8 @@ def _live(system: str, user: str, schema: type[T], stage: str, key: str, tempera
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
             response_format=schema,
             temperature=temperature,
-            max_completion_tokens=max_output_tokens,
+            max_tokens=max_output_tokens,
+            extra_body=extra_body or None,
         )
     except Exception as error:  # provider errors are wrapped so the API can map them to one status
         raise ModelCallFailed(f"{type(error).__name__}: {error}") from error
