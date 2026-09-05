@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { Activity, ArrowRight, BookOpen, Check, ChevronRight, CircleAlert, Download, FileCheck2, Mic, Plus, Quote, Radio, RotateCcw, ShieldCheck, Square, Upload, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Activity, ArrowRight, BookOpen, Check, ChevronRight, CircleAlert, Download, FileCheck2, Plus, Quote, RotateCcw, ShieldCheck, Upload, X } from 'lucide-react'
 import { demo } from './demo'
 import type { Session } from './types'
 
-const API = 'http://127.0.0.1:8000'
+const API = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
 export function App() {
   const [session, setSession] = useState<Session>(demo)
@@ -16,10 +16,7 @@ export function App() {
   const [knowledgeFile, setKnowledgeFile] = useState<File | null>(null)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [followingUp, setFollowingUp] = useState(false)
-  const [capabilities, setCapabilities] = useState({ llm: false, transcription: false, local_fallback: true })
-  const [recording, setRecording] = useState(false)
-  const [voiceStatus, setVoiceStatus] = useState('')
-  const recorder = useRef<MediaRecorder | null>(null)
+  const [capabilities, setCapabilities] = useState({ llm: false, local_fallback: true })
   const [evaluation, setEvaluation] = useState<Record<string, string | number | boolean>>({})
   const [audit, setAudit] = useState<{ id: number; event: string; created_at: string }[]>([])
 
@@ -68,27 +65,6 @@ export function App() {
     finally { setFollowingUp(false) }
   }
 
-  async function toggleRecording() {
-    if (recording) { recorder.current?.stop(); return }
-    if (!capabilities.transcription) { setVoiceStatus('Voice adapter is ready. Add OPENAI_API_KEY to the API environment to enable transcription.'); return }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const chunks: Blob[] = []
-      const active = new MediaRecorder(stream)
-      active.ondataavailable = event => { if (event.data.size) chunks.push(event.data) }
-      active.onstop = async () => {
-        setRecording(false); stream.getTracks().forEach(track => track.stop()); setVoiceStatus('Transcribing…')
-        const form = new FormData(); form.append('file', new Blob(chunks, { type: active.mimeType || 'audio/webm' }), 'discovery.webm')
-        try {
-          const response = await fetch(`${API}/api/audio/transcribe`, { method: 'POST', body: form })
-          if (!response.ok) throw new Error()
-          const data = await response.json(); setTranscript(value => `${value}${value ? '\n' : ''}Voice participant: ${data.transcript}`); setVoiceStatus('Transcript added below.')
-        } catch { setVoiceStatus('Transcription failed. You can still paste the transcript manually.') }
-      }
-      recorder.current = active; active.start(); setRecording(true); setVoiceStatus('Listening… click stop when finished.')
-    } catch { setVoiceStatus('Microphone permission was not granted.') }
-  }
-
   const req = session.requirements[selected]
 
   const completedStages = session.stages.filter(stage => stage.status === 'complete').length
@@ -132,7 +108,7 @@ export function App() {
             <span className="requirement-state"><i className={`confidence-dot ${item.confidence}`} />{item.confidence}<ChevronRight size={15}/></span>
           </button>)}
         </div>
-        <button className="continue-discovery" onClick={() => setComposer(true)}><Mic size={17}/><span><strong>Continue discovery</strong><small>Add transcript or reference material</small></span></button>
+        <button className="continue-discovery" onClick={() => setComposer(true)}><Plus size={17}/><span><strong>Continue discovery</strong><small>Add transcript or reference material</small></span></button>
       </aside>
 
       <article className="evidence-docket">
@@ -202,7 +178,6 @@ export function App() {
         <div className="composer-body">
           <label>Organization<input value={organization} onChange={event => setOrganization(event.target.value)} /></label>
           <label>Discovery transcript<textarea value={transcript} onChange={event => setTranscript(event.target.value)} rows={11} /></label>
-          <div className="voice-control"><button className={`button button-secondary record ${recording ? 'active' : ''}`} type="button" onClick={toggleRecording}>{recording ? <Square size={14}/> : <Radio size={14}/>} {recording ? 'Stop recording' : 'Record discovery'}</button>{voiceStatus && <span className="voice-status">{voiceStatus}</span>}</div>
           <label className="file-field">Reference document <span>Optional · TXT, MD, PDF, DOCX</span><div><Upload size={16}/><strong>{knowledgeFile?.name || 'Choose a reference file'}</strong><input type="file" accept=".txt,.md,.pdf,.docx" onChange={event => setKnowledgeFile(event.target.files?.[0] || null)}/></div></label>
           <div className="composer-note"><ShieldCheck size={16}/><span><strong>Portfolio-safe input only</strong>Use synthetic or non-confidential content in this demo.</span></div>
         </div>

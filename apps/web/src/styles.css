@@ -318,9 +318,6 @@ button { color: inherit; }
 .composer label { display: block; margin-top: 20px; color: var(--ink-soft); font-size: 12px; font-weight: 650; }
 .composer input, .composer textarea { display: block; width: 100%; margin-top: 7px; padding: 11px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-1); background: var(--surface); color: var(--ink); font: 13px/1.55 var(--font-ui); resize: vertical; }
 .composer input:focus, .composer textarea:focus { border-color: var(--accent); outline: 3px solid var(--focus); outline-offset: 1px; }
-.voice-control { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.record.active { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
-.voice-status { color: var(--muted); font-size: 12px; }
 .file-field > span { float: right; color: var(--muted); font-weight: 400; }
 .file-field > div { position: relative; display: flex; align-items: center; gap: 9px; min-height: 48px; margin-top: 7px; padding: 11px 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius-1); }
 .file-field > div:hover { border-color: var(--accent); background: var(--surface-selected); }

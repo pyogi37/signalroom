@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from .analysis import analyze
-from .audio import transcribe_audio, transcription_enabled
 from .demo import demo_session
 from .documents import extract_text
 from .evaluation import evaluate
@@ -34,20 +33,7 @@ def health() -> dict[str, str]:
 
 @app.get("/api/capabilities")
 def capabilities() -> dict[str, bool]:
-    return {"llm": live_model_enabled(), "transcription": transcription_enabled(), "local_fallback": True}
-
-
-@app.post("/api/audio/transcribe")
-async def transcribe(file: UploadFile = File(...)) -> dict[str, str]:
-    if not transcription_enabled():
-        raise HTTPException(status_code=503, detail="Set OPENAI_API_KEY to enable voice transcription")
-    content = await file.read()
-    if len(content) > 25 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Audio exceeds the 25 MB limit")
-    try:
-        return {"transcript": transcribe_audio(content, file.filename or "discovery.webm")}
-    except Exception as error:
-        raise HTTPException(status_code=502, detail="Transcription provider failed") from error
+    return {"llm": live_model_enabled(), "local_fallback": True}
 
 
 @app.get("/api/sessions/demo", response_model=Session)

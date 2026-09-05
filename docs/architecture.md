@@ -47,11 +47,10 @@ Provider-quality embeddings and an LLM structured-output adapter are the next re
 
 Completed locally: persistent solution rooms and audit events, embedded Qdrant retrieval, PDF/DOCX/
 Markdown/text ingestion, visible citations, follow-up re-analysis, DOCX export, an optional structured-
-output model adapter, optional recorded-audio transcription, and a read-only MCP tool surface.
+output model adapter, and a read-only MCP tool surface.
 
 Remaining production path:
 
-1. Streaming speech with partial transcripts, VAD, and interruption handling.
-2. Postgres/pgvector deployment plus hybrid retrieval and reranking.
-3. Persistent LangGraph checkpointers and native resumable interrupts.
-4. Trace storage, batch evaluation runs, cost/latency metrics, authentication, and access control.
+1. Postgres/pgvector deployment plus hybrid retrieval and reranking.
+2. Persistent LangGraph checkpointers and native resumable interrupts.
+3. Trace storage, batch evaluation runs, cost/latency metrics, authentication, and access control.

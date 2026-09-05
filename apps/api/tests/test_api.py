@@ -74,11 +74,6 @@ def test_follow_up_reuses_the_persistent_session():
     assert revised.json()["id"] == analyzed["id"]
 
 
-def test_voice_endpoint_explains_missing_provider_key():
-    response = client.post("/api/audio/transcribe", files={"file": ("voice.webm", b"not-real-audio", "audio/webm")})
-    assert response.status_code == 503
-
-
 def test_evaluation_and_docx_export():
     analyzed = client.post("/api/sessions/analyze", json={
         "organization": "Export Example",

@@ -12,3 +12,7 @@ apps/api/data/
 *.sqlite3
 .impeccable/config.local.json
 .impeccable/review/
+
+# Local agent tooling (Codex skill install and hooks); kept on disk, not part of the product
+.agents/
+.codex/

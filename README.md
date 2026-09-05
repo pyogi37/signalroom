@@ -1,6 +1,6 @@
 # SignalRoom
 
-SignalRoom is a synthetic, portfolio-safe **voice-first AI solutioning engineer**. It turns a messy
+SignalRoom is a synthetic, portfolio-safe **AI solutioning assistant**. It turns a messy
 customer discovery conversation into evidence-backed requirements, open questions, risks, and a
 reviewable solution brief.
 
@@ -17,7 +17,7 @@ are fictional.
 - Paste-your-own synthetic transcript analysis
 - Embedded Qdrant vector retrieval with deterministic local embeddings
 - Persistent SQLite solution rooms and audit events
-- Optional OpenAI structured-output and audio-transcription adapters
+- Optional OpenAI structured-output adapter
 - Read-only MCP server for knowledge, room, and evaluation tools
 - DOCX solution-brief export
 - FastAPI backend with a LangGraph workflow
@@ -46,7 +46,7 @@ Open `http://localhost:5173`. Click **Analyze new discovery** to run a synthetic
 the extraction and retrieval pipeline. The frontend falls back to embedded synthetic demo data if the API is
 not running, so the portfolio walkthrough remains usable.
 
-### Optional live model and voice
+### Optional live model
 
 Copy `.env.example` to `.env`, set `OPENAI_API_KEY`, and change `SIGNALROOM_LLM_PROVIDER` to
 `openai`. Without a key, SignalRoom stays in deterministic local mode and clearly labels itself as
