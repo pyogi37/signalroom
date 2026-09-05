@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from .config import env
 from .documents import extract_text
 from .exports import brief_docx
+from .fixtures import load_fixtures
 from .model_client import describe as describe_model
 from .models import CreateRoomRequest, DecisionRequest, KnowledgeDocument, Room, SearchHit
 from .persistence import audit_events, get_room, list_rooms, log_event, save_room
@@ -58,6 +59,16 @@ def capabilities() -> dict:
 @app.get("/api/rooms")
 def rooms() -> list[dict]:
     return list_rooms()
+
+
+@app.get("/api/fixtures")
+def fixtures() -> list[dict]:
+    """Synthetic example transcripts the composer can load. All invented."""
+    return [
+        {"id": item.id, "organization": item.organization, "industry": item.industry, "transcript": item.transcript,
+         "lines": len(item.transcript.splitlines()), "seeded": item.seed}
+        for item in load_fixtures()
+    ]
 
 
 @app.post("/api/rooms", response_model=Room, status_code=201)

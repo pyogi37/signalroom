@@ -215,3 +215,6 @@ def test_capabilities_and_knowledge_endpoints(client):
     upload = client.post("/api/knowledge/upload", files={"file": ("guide.md", b"A synthetic integration guide requires authentication, rate limits, and evidence retention.", "text/markdown")})
     assert upload.status_code == 201 and upload.json()["passages"] >= 1
     assert client.get("/api/evaluation/latest").status_code in (200, 404)
+    fixtures = client.get("/api/fixtures").json()
+    assert len(fixtures) == 10 and all(item["lines"] >= 20 for item in fixtures)
+    assert {item["id"] for item in fixtures if item["seeded"]} == {"northstar-cold-chain", "kestrel-yard-logistics", "meridian-regional-hospital", "orion-ground-services"}
