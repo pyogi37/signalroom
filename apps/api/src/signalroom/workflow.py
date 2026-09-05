@@ -1,10 +1,10 @@
-import os
 import sqlite3
-from pathlib import Path
 from typing import TypedDict
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
+
+from .config import data_dir
 
 
 class SolutionState(TypedDict, total=False):
@@ -44,9 +44,7 @@ def build_graph():
     graph.add_edge("retrieve", "design")
     graph.add_edge("design", "critique")
     graph.add_edge("critique", END)
-    data_dir = Path(os.getenv("SIGNALROOM_DATA_DIR", Path(__file__).resolve().parents[2] / "data"))
-    data_dir.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(data_dir / "langgraph.sqlite3", check_same_thread=False)
+    connection = sqlite3.connect(data_dir() / "langgraph.sqlite3", check_same_thread=False)
     return graph.compile(checkpointer=SqliteSaver(connection))
 
 

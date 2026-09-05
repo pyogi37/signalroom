@@ -54,10 +54,12 @@ class KnowledgeDocument(BaseModel):
 
 
 class SearchHit(BaseModel):
+    passage_id: str
     title: str
     passage: str
     score: float
     source: str
+    shared_terms: int = 0
 
 
 class FollowUpAnswer(BaseModel):

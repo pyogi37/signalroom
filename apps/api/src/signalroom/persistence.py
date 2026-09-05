@@ -1,14 +1,11 @@
 import json
-import os
 import sqlite3
-from pathlib import Path
 
+from .config import data_dir
 from .models import Session
 
 
-DATA_DIR = Path(os.getenv("SIGNALROOM_DATA_DIR", Path(__file__).resolve().parents[2] / "data"))
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-DATABASE = DATA_DIR / "signalroom.sqlite3"
+DATABASE = data_dir() / "signalroom.sqlite3"
 
 
 def _connect() -> sqlite3.Connection:

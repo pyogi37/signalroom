@@ -1,59 +1,131 @@
-import hashlib
-import math
-import os
+"""Reference knowledge retrieval over SQLite full-text search.
+
+The pattern library is a few dozen passages. That size does not justify a
+vector database, so retrieval is BM25 through SQLite's FTS5 module with
+Porter stemming. A passage is returned only when it ranks in the top results
+and shares at least two content terms with the query, which keeps a single
+common word from producing a "match". The swap point for embeddings, if the
+corpus ever grows, is the `KnowledgeStore` interface: `add`, `search`, `count`.
+"""
+
 import re
-import atexit
+import sqlite3
 from pathlib import Path
-from uuid import uuid4
 
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
-
+from .config import data_dir
 from .models import KnowledgeDocument, SearchHit
 
-DIMENSIONS = 192
-COLLECTION = "solutioning_knowledge"
+STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "before", "but", "by", "can", "do", "does", "for", "from",
+    "has", "have", "how", "if", "in", "into", "is", "it", "its", "must", "no", "not", "of", "on", "or",
+    "our", "should", "so", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this",
+    "to", "us", "we", "what", "when", "which", "who", "will", "with", "would", "you", "your", "need", "needs",
+    "want", "wants", "also", "just", "like", "any", "all", "each", "every", "more", "most", "some", "such",
+}
+
+MIN_SHARED_TERMS = 2
 
 
-def embed(text: str) -> list[float]:
-    """Dependency-free hashing embeddings for a reproducible local demo."""
-    vector = [0.0] * DIMENSIONS
-    tokens = re.findall(r"[a-z0-9]+", text.lower())
-    for token in tokens:
-        digest = hashlib.blake2b(token.encode(), digest_size=8).digest()
-        index = int.from_bytes(digest[:4], "little") % DIMENSIONS
-        sign = 1 if digest[4] % 2 else -1
-        vector[index] += sign * (1 + min(len(token), 12) / 12)
-    norm = math.sqrt(sum(value * value for value in vector)) or 1
-    return [value / norm for value in vector]
+def _terms(text: str) -> list[str]:
+    seen: list[str] = []
+    for token in re.findall(r"[a-z0-9]+", text.lower()):
+        if len(token) >= 3 and token not in STOPWORDS and token not in seen:
+            seen.append(token)
+    return seen
+
+
+def _stem(token: str) -> str:
+    """A deliberately crude stem used only for the shared-term floor; FTS5 does the real stemming."""
+    for suffix in ("ations", "ation", "ings", "ing", "ies", "ers", "ed", "es", "s"):
+        if token.endswith(suffix) and len(token) - len(suffix) >= 4:
+            return token[: -len(suffix)]
+    return token
+
+
+def split_passages(content: str) -> list[str]:
+    parts = re.split(r"\n\s*\n|(?<=[.!?])\s+(?=[A-Z])", content)
+    return [part.strip() for part in parts if len(part.strip()) > 25]
+
+
+def _slug(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:48]
 
 
 class KnowledgeStore:
-    def __init__(self) -> None:
-        data_dir = Path(os.getenv("SIGNALROOM_DATA_DIR", Path(__file__).resolve().parents[2] / "data"))
-        data_dir.mkdir(parents=True, exist_ok=True)
-        self.client = QdrantClient(path=str(data_dir / "qdrant"))
-        if not self.client.collection_exists(COLLECTION):
-            self.client.create_collection(COLLECTION, vectors_config=VectorParams(size=DIMENSIONS, distance=Distance.COSINE))
+    def __init__(self, path: Path | str | None = None) -> None:
+        location = str(path) if path else str(data_dir() / "knowledge.sqlite3")
+        self.connection = sqlite3.connect(location, check_same_thread=False)
+        self.connection.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS passages USING fts5("
+            "title, passage, source UNINDEXED, passage_id UNINDEXED, tokenize='porter unicode61')"
+        )
+        self.connection.commit()
+
+    def count(self) -> int:
+        return int(self.connection.execute("SELECT count(*) FROM passages").fetchone()[0])
 
     def add(self, document: KnowledgeDocument) -> int:
-        passages = [part.strip() for part in re.split(r"\n\s*\n|(?<=[.!?])\s+(?=[A-Z])", document.content) if len(part.strip()) > 25]
-        points = [PointStruct(id=str(uuid4()), vector=embed(passage), payload={"title": document.title, "passage": passage, "source": document.source}) for passage in passages]
-        if points:
-            self.client.upsert(COLLECTION, points)
-        return len(points)
+        passages = split_passages(document.content)
+        slug = _slug(document.title)
+        existing = int(self.connection.execute(
+            "SELECT count(*) FROM passages WHERE passage_id LIKE ?", (f"{slug}#%",)
+        ).fetchone()[0])
+        rows = [
+            (document.title, passage, document.source, f"{slug}#{existing + index + 1}")
+            for index, passage in enumerate(passages)
+        ]
+        if rows:
+            self.connection.executemany(
+                "INSERT INTO passages(title, passage, source, passage_id) VALUES (?, ?, ?, ?)", rows
+            )
+            self.connection.commit()
+        return len(rows)
 
     def search(self, query: str, limit: int = 4) -> list[SearchHit]:
-        response = self.client.query_points(collection_name=COLLECTION, query=embed(query), limit=limit, with_payload=True)
-        return [SearchHit(title=str(hit.payload.get("title")), passage=str(hit.payload.get("passage")), source=str(hit.payload.get("source")), score=round(float(hit.score), 3)) for hit in response.points]
+        terms = _terms(query)
+        if not terms:
+            return []
+        match = " OR ".join(f'"{term}"' for term in terms[:40])
+        rows = self.connection.execute(
+            "SELECT title, passage, source, passage_id, bm25(passages, 3.0, 1.0) AS rank "
+            "FROM passages WHERE passages MATCH ? ORDER BY rank LIMIT ?",
+            (match, max(limit * 3, 12)),
+        ).fetchall()
+        query_stems = {_stem(term) for term in terms}
+        hits: list[SearchHit] = []
+        for title, passage, source, passage_id, rank in rows:
+            passage_stems = {_stem(term) for term in _terms(f"{title} {passage}")}
+            shared = len(query_stems & passage_stems)
+            if shared < MIN_SHARED_TERMS:
+                continue
+            hits.append(SearchHit(
+                passage_id=passage_id, title=title, passage=passage, source=source,
+                score=round(-float(rank), 3), shared_terms=shared,
+            ))
+            if len(hits) >= limit:
+                break
+        return hits
+
+    def get(self, passage_id: str) -> SearchHit | None:
+        row = self.connection.execute(
+            "SELECT title, passage, source, passage_id FROM passages WHERE passage_id = ?", (passage_id,)
+        ).fetchone()
+        if not row:
+            return None
+        return SearchHit(passage_id=row[3], title=row[0], passage=row[1], source=row[2], score=0.0, shared_terms=0)
+
+    def seed(self, documents: list[KnowledgeDocument]) -> int:
+        if self.count():
+            return 0
+        return sum(self.add(document) for document in documents)
 
 
-store = KnowledgeStore()
-atexit.register(store.client.close)
-if store.client.count(COLLECTION).count == 0:
-    for seed in [
-        KnowledgeDocument(title="Telemetry integration pattern", source="synthetic pattern library", content="Prefer read-only ingestion during a proof of concept. Confirm authentication, rate limits, timestamp semantics, data retention, and backfill behavior before committing the integration design."),
-        KnowledgeDocument(title="Operational alert design", source="synthetic pattern library", content="Alert thresholds should be calibrated against historical events. Every notification should retain the triggering evidence, threshold version, acknowledgement state, and responsible reviewer."),
-        KnowledgeDocument(title="PoC measurement guide", source="synthetic pattern library", content="A proof of concept requires a baseline, a named metric owner, a measurement window, and an explicit acceptance threshold. Avoid invented improvement percentages when no baseline exists."),
-    ]:
-        store.add(seed)
+def build_store(path: Path | str | None = None) -> KnowledgeStore:
+    from .pattern_library import SEED_DOCUMENTS
+
+    store = KnowledgeStore(path)
+    store.seed(SEED_DOCUMENTS)
+    return store
+
+
+store = build_store()
