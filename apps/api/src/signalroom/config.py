@@ -8,6 +8,12 @@ environment; nothing in this module writes them anywhere.
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# apps/api/.env holds the model key on a developer machine. It is gitignored.
+# Real environment variables take precedence over the file.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
+
 
 def data_dir() -> Path:
     """Directory for SQLite files and other local state. Created on first use."""
