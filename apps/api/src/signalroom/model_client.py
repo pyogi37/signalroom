@@ -186,8 +186,9 @@ def structured_call(
     *,
     temperature: float = 0.0,
     max_output_tokens: int = 8192,
+    mode: str | None = None,
 ) -> tuple[T, ModelCall]:
-    mode = configured_mode()
+    mode = mode if mode in {"auto", "live", "replay", "record"} else configured_mode()
     key = recording_key(model_name(), system, user, schema.__name__)
     path = recordings_dir() / f"{key}.json"
 

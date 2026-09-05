@@ -1,29 +1,48 @@
-from time import perf_counter
+import json
+import logging
+from contextlib import asynccontextmanager
+from pathlib import Path
+from uuid import uuid4
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from .analysis import analyze
-from .demo import demo_session
+from .config import env
 from .documents import extract_text
-from .evaluation import evaluate
 from .exports import brief_docx
-from .llm import live_model_enabled
-from .models import AnalyzeRequest, FollowUpRequest, KnowledgeDocument, ReviewRequest, SearchHit, Session
-from .persistence import audit_events, get_session, log_event, recent_sessions, save_session
+from .model_client import describe as describe_model
+from .models import CreateRoomRequest, DecisionRequest, KnowledgeDocument, Room, SearchHit
+from .persistence import audit_events, get_room, list_rooms, log_event, save_room
 from .retrieval import store
-from .workflow import graph_history
+from .seeding import seed_rooms
+from .workflow import resume_room, room_is_waiting, start_room, to_room, trace
 
-app = FastAPI(title="SignalRoom API", version="0.2.0")
+log = logging.getLogger("signalroom")
+RESULTS_PATH = Path(__file__).resolve().parents[2] / "evals" / "results" / "latest.json"
+
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    if env("SIGNALROOM_SKIP_SEED") != "1":
+        outcome = seed_rooms()
+        if outcome["seeded"] or outcome["skipped"]:
+            log.info("Seeded rooms %s; skipped %s", outcome["seeded"], outcome["skipped"])
+    yield
+
+
+app = FastAPI(title="SignalRoom API", version="0.3.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[origin.strip() for origin in env(
+        "SIGNALROOM_CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174",
+    ).split(",") if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-save_session(demo_session())
 
 
 @app.get("/health")
@@ -32,58 +51,93 @@ def health() -> dict[str, str]:
 
 
 @app.get("/api/capabilities")
-def capabilities() -> dict[str, bool]:
-    return {"llm": live_model_enabled(), "local_fallback": True}
+def capabilities() -> dict:
+    return {**describe_model(), "synthetic_only": True}
 
 
-@app.get("/api/sessions/demo", response_model=Session)
-def get_demo_session() -> Session:
-    return demo_session()
+@app.get("/api/rooms")
+def rooms() -> list[dict]:
+    return list_rooms()
 
 
-@app.get("/api/sessions")
-def list_sessions() -> list[dict[str, str]]:
-    return recent_sessions()
+@app.post("/api/rooms", response_model=Room, status_code=201)
+def create_room(request: CreateRoomRequest) -> Room:
+    room_id = uuid4().hex[:12]
+    state = start_room(room_id, request.organization.strip(), request.industry.strip(), request.transcript)
+    if state.get("error"):
+        status = 503 if state.get("error_kind") == "model_unavailable" else 502
+        raise HTTPException(status_code=status, detail=state["error"])
+    room = save_room(to_room(state))
+    log_event(room.id, "room_created", {"metrics": room.metrics, "grounding": room.grounding.model_dump(), "stages": [stage.model_dump() for stage in room.stages]})
+    return room
 
 
-@app.get("/api/sessions/{session_id}", response_model=Session)
-def read_session(session_id: str) -> Session:
-    found = get_session(session_id)
-    if not found:
-        raise HTTPException(status_code=404, detail="Session not found")
-    return found
+@app.get("/api/rooms/{room_id}", response_model=Room)
+def read_room(room_id: str) -> Room:
+    room = get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
 
 
-@app.post("/api/sessions/analyze", response_model=Session)
-def analyze_discovery(request: AnalyzeRequest) -> Session:
-    started = perf_counter()
-    session = save_session(analyze(request))
-    log_event(session.id, "analysis_completed", {
-        "requirements": len(session.requirements),
-        "open_questions": len(session.open_questions),
-        "retrieval_hits": len(session.brief.get("retrieval", [])),
-        "duration_ms": round((perf_counter() - started) * 1000, 2),
-        "execution_mode": session.brief.get("execution_mode", "demo fixture"),
-    })
-    return session
+@app.post("/api/rooms/{room_id}/decision", response_model=Room)
+def decide(room_id: str, request: DecisionRequest) -> Room:
+    room = get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    if room.status == "approved":
+        raise HTTPException(status_code=409, detail="This brief is already approved")
+    if room.status == "failed":
+        raise HTTPException(status_code=409, detail="This room failed during a model stage; start a new room")
+    if not room_is_waiting(room_id):
+        raise HTTPException(status_code=409, detail="This room is not waiting at the gate")
+    if request.kind == "follow_up":
+        open_ids = {item.id for item in room.open_items if item.status == "open"}
+        unknown = [answer.open_item_id for answer in request.answers if answer.open_item_id not in open_ids]
+        if not request.answers:
+            raise HTTPException(status_code=422, detail="Add at least one answer to an open item")
+        if unknown:
+            raise HTTPException(status_code=422, detail=f"Unknown or already answered open items: {', '.join(unknown)}")
+    if request.kind == "request_changes" and not request.note.strip():
+        raise HTTPException(status_code=422, detail="Say what should change")
+
+    state = resume_room(room_id, request.model_dump())
+    updated = save_room(to_room(state, created_at=room.created_at, fixture=room.fixture))
+    event = {"approve": "brief_approved", "request_changes": "changes_requested", "follow_up": "follow_up_added"}[request.kind]
+    log_event(room_id, event, {"note": request.note, "answers": len(request.answers), "status": updated.status, "error": updated.error}, actor="solution engineer")
+    return updated
 
 
-@app.post("/api/sessions/{session_id}/follow-up", response_model=Session)
-def answer_follow_up(session_id: str, request: FollowUpRequest) -> Session:
-    current = get_session(session_id)
-    if not current:
-        raise HTTPException(status_code=404, detail="Session not found")
-    transcript = str(current.brief.get("transcript", ""))
-    additions = "\n".join(f"Follow-up — {item.question}: {item.answer}" for item in request.answers)
-    revised = analyze(AnalyzeRequest(organization=current.organization, transcript=f"{transcript}\n{additions}"), session_id=current.id)
-    save_session(revised)
-    log_event(session_id, "follow_up_analyzed", {"answers": len(request.answers), "remaining_questions": len(revised.open_questions)})
-    return revised
+@app.get("/api/rooms/{room_id}/trace")
+def read_trace(room_id: str) -> list[dict]:
+    if not get_room(room_id):
+        raise HTTPException(status_code=404, detail="Room not found")
+    return trace(room_id)
+
+
+@app.get("/api/rooms/{room_id}/audit")
+def read_audit(room_id: str) -> list[dict]:
+    if not get_room(room_id):
+        raise HTTPException(status_code=404, detail="Room not found")
+    return audit_events(room_id)
+
+
+@app.get("/api/rooms/{room_id}/export.docx")
+def export_brief(room_id: str) -> StreamingResponse:
+    room = get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    filename = f"signalroom-{room.organization.lower().replace(' ', '-')}-r{room.brief.revision if room.brief else 0}.docx"
+    return StreamingResponse(
+        brief_docx(room),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.post("/api/knowledge", status_code=201)
 def add_knowledge(document: KnowledgeDocument) -> dict[str, int | str]:
-    return {"status": "indexed", "passages": store.add(document)}
+    return {"status": "indexed", "title": document.title, "passages": store.add(document)}
 
 
 @app.post("/api/knowledge/upload", status_code=201)
@@ -96,8 +150,8 @@ async def upload_knowledge(file: UploadFile = File(...), title: str = Form("")) 
         raise HTTPException(status_code=422, detail="No usable text could be extracted")
     document = KnowledgeDocument(
         title=title.strip() or file.filename or "Uploaded document",
-        content=text,
-        source=file.filename or "uploaded document",
+        content=text[:20_000],
+        source=f"uploaded reference: {file.filename or 'document'}",
     )
     return {"status": "indexed", "title": document.title, "passages": store.add(document)}
 
@@ -107,56 +161,8 @@ def search_knowledge(query: str, limit: int = 4) -> list[SearchHit]:
     return store.search(query, min(max(limit, 1), 12))
 
 
-@app.post("/api/sessions/{session_id}/review", response_model=Session)
-def review_session(session_id: str, request: ReviewRequest) -> Session:
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    if session.status != "review":
-        raise HTTPException(status_code=409, detail="Session is not awaiting review")
-    if request.decision == "approve":
-        session.status = "approved"
-        session.progress = 100
-        session.stages[-1] = {"name": "Approve", "status": "complete", "detail": "Approved by solution engineer"}
-    else:
-        session.stage = "critique"
-        session.progress = 74
-        session.stages[-1] = {"name": "Approve", "status": "blocked", "detail": request.note or "Changes requested"}
-    save_session(session)
-    log_event(session.id, "brief_approved" if request.decision == "approve" else "changes_requested", {"note": request.note})
-    return session
-
-
-@app.get("/api/sessions/{session_id}/audit")
-def read_audit(session_id: str) -> list[dict[str, object]]:
-    if not get_session(session_id):
-        raise HTTPException(status_code=404, detail="Session not found")
-    return audit_events(session_id)
-
-
-@app.get("/api/sessions/{session_id}/trace")
-def read_trace(session_id: str) -> list[dict]:
-    if not get_session(session_id):
-        raise HTTPException(status_code=404, detail="Session not found")
-    return graph_history(session_id)
-
-
-@app.get("/api/sessions/{session_id}/evaluation")
-def read_evaluation(session_id: str) -> dict[str, int | float | bool | str]:
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    return evaluate(session)
-
-
-@app.get("/api/sessions/{session_id}/export.docx")
-def export_brief(session_id: str) -> StreamingResponse:
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    filename = f"signalroom-{session.organization.lower().replace(' ', '-')}.docx"
-    return StreamingResponse(
-        brief_docx(session),
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+@app.get("/api/evaluation/latest")
+def latest_evaluation() -> dict:
+    if not RESULTS_PATH.exists():
+        raise HTTPException(status_code=404, detail="No evaluation results have been recorded yet")
+    return json.loads(RESULTS_PATH.read_text(encoding="utf-8"))
