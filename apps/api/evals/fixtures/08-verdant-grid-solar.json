@@ -1,0 +1,56 @@
+{
+  "id": "verdant-grid-solar",
+  "organization": "Verdant Grid Solar",
+  "industry": "Utility-scale solar operations and maintenance (synthetic)",
+  "synthetic": true,
+  "seed": false,
+  "transcript": [
+    "Solution engineer: Walk me through an inspection today.",
+    "Drone operations lead: We fly each site twice a year. A flight produces a few thousand thermal images. A contractor marks anomalies and sends a PDF report six weeks later.",
+    "O&M director: By the time we read it, half the anomalies have either fixed themselves or turned into failures.",
+    "Performance analyst: And the report does not tell us which ones cost us energy. A hot cell on a string that is already underperforming matters more than one on a healthy string.",
+    "Solution engineer: What do you want instead?",
+    "O&M director: A ranked list of anomalies within a couple of days of the flight, with the image and the string it sits on.",
+    "Performance analyst: Ranked by estimated energy impact, using the monitoring data we already have per string.",
+    "Solution engineer: Where does the monitoring data live?",
+    "Performance analyst: In our monitoring platform. It has an export, daily per string. No public API, but we can schedule a CSV drop.",
+    "Drone operations lead: The images come with GPS and gimbal angle. Mapping an image to a string is doable but nobody has done it for our layouts.",
+    "Solution engineer: Do you have site layouts in a usable form?",
+    "Drone operations lead: CAD drawings for most sites. Two of the older ones only have PDFs.",
+    "Asset owner representative: Our concern is false positives. Sending a truck to a healthy panel costs more than ignoring a warm one for a month.",
+    "O&M director: So the ranking has to be conservative and explain itself.",
+    "Solution engineer: What is your current false positive rate from the contractor reports?",
+    "O&M director: We have never measured it. Anecdotally, high.",
+    "Asset owner representative: We would want that measured before anyone trusts a new ranking.",
+    "Solution engineer: Who would act on the ranked list?",
+    "O&M director: The regional technicians, through the normal work order system. That part does not change.",
+    "Drone operations lead: The drone flights themselves stay with us. We are not outsourcing that.",
+    "Solution engineer: Which sites for a pilot?",
+    "O&M director: Two sites in the south region, both with CAD layouts and a flight due next month.",
+    "Solution engineer: Data constraints?",
+    "Asset owner representative: Images and production data are commercially sensitive. Contract terms say they stay in the region.",
+    "Performance analyst: We also talked about ground robots for cleaning. That is a different conversation.",
+    "O&M director: And eventually we want this for wind sites too. Not in this scope."
+  ],
+  "gold": {
+    "requirements": [
+      {"key": "ranked-anomalies", "kind": "functional", "must_mention": [["rank"], ["string", "image", "days"]]},
+      {"key": "rank-by-energy-impact", "kind": "functional", "must_mention": [["energy", "impact", "underperform"]]},
+      {"key": "monitoring-csv", "kind": "constraint", "must_mention": [["csv", "export", "monitoring"]]},
+      {"key": "conservative-explained", "kind": "functional", "must_mention": [["conservative", "explain"]]},
+      {"key": "work-order-unchanged", "kind": "constraint", "must_mention": [["work order"]]},
+      {"key": "two-south-sites", "kind": "constraint", "must_mention": [["two sites", "south", "cad"]]},
+      {"key": "data-stays-in-region", "kind": "constraint", "must_mention": [["region", "sensitive", "contract"]]},
+      {"key": "flights-in-house", "kind": "constraint", "must_mention": [["flights", "outsourc", "drone"]]}
+    ],
+    "open_items": [
+      {"key": "false-positive-baseline", "must_mention": [["false positive"]]},
+      {"key": "image-to-string-mapping", "must_mention": [["mapping", "map", "gps", "gimbal", "string"]]},
+      {"key": "pdf-layouts", "must_mention": [["pdf", "layout", "cad"]]}
+    ],
+    "traps": [
+      {"type": "gap", "note": "The false positive rate has never been measured.", "must_be_open": [["false positive"]]},
+      {"type": "gap", "note": "Image to string mapping has never been done for these layouts.", "must_be_open": [["mapping", "map", "gps", "gimbal", "string"]]}
+    ]
+  }
+}

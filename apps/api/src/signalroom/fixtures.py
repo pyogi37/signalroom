@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 FIXTURES_DIR = Path(__file__).resolve().parents[2] / "evals" / "fixtures"
 
@@ -52,6 +52,12 @@ class Fixture(BaseModel):
     transcript: str
     gold: Gold = Field(default_factory=Gold)
     follow_up: FollowUpScenario | None = None
+
+    @field_validator("transcript", mode="before")
+    @classmethod
+    def join_lines(cls, value):
+        """Fixtures write the transcript as a list of lines so line numbers are easy to count."""
+        return "\n".join(value) if isinstance(value, list) else value
 
 
 def load_fixtures(directory: Path | None = None) -> list[Fixture]:

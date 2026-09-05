@@ -1,0 +1,66 @@
+{
+  "id": "meridian-regional-hospital",
+  "organization": "Meridian Regional Hospital",
+  "industry": "Hospital operations and medical equipment (synthetic)",
+  "synthetic": true,
+  "seed": true,
+  "transcript": [
+    "Solution engineer: What is the problem you are trying to solve?",
+    "Nursing director: Nurses spend the start of every shift hunting for infusion pumps. We own plenty, we just cannot find them.",
+    "Biomedical engineering lead: We have about four hundred pumps across the main building. Roughly a hundred are in maintenance or missing at any time.",
+    "Finance partner: We bought sixty more last year and the shortage did not change. That is the number I care about.",
+    "Solution engineer: Is there any tagging on the pumps today?",
+    "Biomedical engineering lead: They all have BLE tags. We fitted them two years ago for a project that never went live.",
+    "IT security lead: About half of them have tags. The rest were never fitted because the vendor ran out and nobody followed up.",
+    "Biomedical engineering lead: That does not match my records, but I will check.",
+    "Solution engineer: What would you want to see?",
+    "Nursing director: Where the nearest available pump is, on the ward, from a phone. That is it.",
+    "Biomedical engineering lead: And a flag when a pump has not moved for more than a day, because that usually means it is in a cupboard.",
+    "Solution engineer: Which wards for a pilot?",
+    "Nursing director: Two medical wards on the third floor. They are the worst for it.",
+    "IT security lead: Anything that tracks a device near a patient goes through our privacy review. The tags do not carry patient data, but the location history could imply it.",
+    "Solution engineer: What does that review need?",
+    "IT security lead: A data flow, a retention period and a named owner. It takes about a month.",
+    "Finance partner: How will we know it worked?",
+    "Nursing director: Time to find a pump. Ask any nurse and they will say twenty minutes, but nobody has timed it.",
+    "Solution engineer: Would you be willing to time it for a week before the pilot?",
+    "Nursing director: Yes, if someone gives the ward a simple sheet.",
+    "Biomedical engineering lead: The gateways for BLE are already on the ceilings on the third floor. I cannot say whether they are all powered.",
+    "IT security lead: They are on the building network, which is fine. No cloud for the location data without the review.",
+    "Solution engineer: Understood. Who would own the pilot day to day?",
+    "Nursing director: One of my ward managers, once I pick one.",
+    "Finance partner: We also talked about tracking wheelchairs. Not now.",
+    "Solution engineer: I will note it as discussed, not in scope.",
+    "Biomedical engineering lead: One thing. Some pumps go to the sterilisation unit in the basement and the tags do not work through those walls. Do not count those as missing.",
+    "Solution engineer: Good to know. Anything else before I draft?",
+    "IT security lead: Just that the review starts when the data flow exists, so send that first."
+  ],
+  "gold": {
+    "requirements": [
+      {"key": "locate-nearest-pump", "kind": "functional", "must_mention": [["nearest", "find", "locate", "where"]], "note": "from a phone on the ward"},
+      {"key": "stationary-flag", "kind": "functional", "must_mention": [["not moved", "has not moved", "stationary", "more than a day", "cupboard"]]},
+      {"key": "third-floor-wards", "kind": "constraint", "must_mention": [["third floor", "two medical wards", "two wards"]]},
+      {"key": "privacy-review", "kind": "constraint", "must_mention": [["privacy review", "privacy"]]},
+      {"key": "no-cloud-without-review", "kind": "constraint", "must_mention": [["cloud"]]},
+      {"key": "sterilisation-exclusion", "kind": "constraint", "must_mention": [["sterilis", "basement"]]},
+      {"key": "time-to-find", "kind": "success_measure", "must_mention": [["time to find", "find a pump", "twenty minutes"]]}
+    ],
+    "open_items": [
+      {"key": "tag-coverage", "must_mention": [["tag"]]},
+      {"key": "gateways-powered", "must_mention": [["gateway"], ["power"]]},
+      {"key": "retention", "must_mention": [["retention"]]},
+      {"key": "pilot-owner", "must_mention": [["owner", "ward manager", "own"]]},
+      {"key": "baseline", "must_mention": [["baseline", "timed", "time it", "measure"]]}
+    ],
+    "traps": [
+      {"type": "contradiction", "note": "All pumps have BLE tags (L6) versus about half (L7).", "lines": [6, 7]},
+      {"type": "gap", "note": "The pilot owner has not been named.", "must_be_open": [["owner", "ward manager", "own"]]},
+      {"type": "gap", "note": "Retention period is required by the privacy review and was not stated.", "must_be_open": [["retention"]]}
+    ]
+  },
+  "follow_up": {
+    "open_item_key": "pilot-owner",
+    "real_answer": "The nursing director has named the ward manager of the third floor east ward as the day-to-day pilot owner.",
+    "non_answer": "Still deciding, will get back to you."
+  }
+}

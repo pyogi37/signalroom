@@ -16,3 +16,6 @@ apps/api/data/
 # Local agent tooling (Codex skill install and hooks); kept on disk, not part of the product
 .agents/
 .codex/
+
+# Evaluation run history (latest.json is committed; per-run copies are not)
+apps/api/evals/results/history/

@@ -1,0 +1,69 @@
+{
+  "id": "northstar-cold-chain",
+  "organization": "Northstar Cold Chain",
+  "industry": "Cold storage and distribution (synthetic)",
+  "synthetic": true,
+  "seed": true,
+  "transcript": [
+    "Solution engineer: Thanks for making time. Can we start with what happens today when a loading bay goes out of temperature range?",
+    "Operations lead: Honestly, we usually discover an excursion when the shift report is already being written. Someone notices the log and by then the product has been sitting there for hours.",
+    "Quality manager: And then I spend the next morning reconstructing what happened from the gateway logs and the shift notes. It is a manual job.",
+    "Sponsor: A supervisor can lose most of an hour piecing together one event, sometimes more if it crosses a shift change.",
+    "Solution engineer: How many bays and sites are we talking about?",
+    "Operations lead: Two sites in the pilot, the northern depot and the coastal hub. Each has about a dozen bays with sensors.",
+    "IT architect: The sensors feed a telemetry gateway we installed three years ago. The gateway is staying. Anything new has to consume its API.",
+    "Solution engineer: What does the API look like? Push or pull, and what authentication?",
+    "IT architect: It is a pull API with JSON readings per bay. On authentication I would have to check with the vendor, I think it is a static token but I am not certain.",
+    "Solution engineer: Do you know the rate limits or whether it can serve historical readings?",
+    "IT architect: No idea on rate limits. Historical readings, I believe it keeps thirty days.",
+    "Operations lead: What we want is simple. If a bay stays outside its range for more than a few minutes, the person on shift should get told, not the quality team the next day.",
+    "Quality manager: With the reading and the threshold attached, so I do not have to go looking for it afterwards.",
+    "Solution engineer: Who would acknowledge that alert, and who can close it?",
+    "Operations lead: That is a good question. Right now nobody owns it. It would probably be the shift supervisor but we have not decided.",
+    "Sponsor: Let's leave that open. I want to see the alerts working before we argue about ownership.",
+    "Solution engineer: How would you judge whether the pilot worked?",
+    "Sponsor: Investigation time, mainly. If a supervisor can see the timeline in a few minutes instead of an hour, that is the win.",
+    "Quality manager: We do not have a measured baseline for that though. The hour figure is a feeling, not a number.",
+    "Sponsor: Fair. We could measure it for a couple of weeks before switching anything on.",
+    "Solution engineer: Are there any constraints on where the data can live?",
+    "IT architect: The readings are not sensitive, but our security team will want to review anything that talks to the gateway. Read-only would make that easier.",
+    "Solution engineer: Understood, read-only first. Anything about existing alerting we should know?",
+    "Operations lead: The gateway has email alerts but everyone turned them off years ago. They fired for every one-degree blip.",
+    "Quality manager: So whatever you build needs to be calibrated, or people will switch it off again.",
+    "IT architect: One more thing, and I should be honest about this. There is a proposal to replace the gateway next year with the vendor's cloud platform. It is not approved.",
+    "Solution engineer: Noted. That would change the integration, so we should treat it as a risk.",
+    "Sponsor: For the pilot, assume the gateway stays. Six weeks is what I can defend to the board.",
+    "Operations lead: We also talked about door sensors at some point, but that is a different budget.",
+    "Solution engineer: I will keep that out of scope but note it was discussed. Anything else?",
+    "Sponsor: Send me the brief by Friday and we will decide on the pilot."
+  ],
+  "gold": {
+    "requirements": [
+      {"key": "detect-excursion", "kind": "functional", "must_mention": [["excursion", "outside its range", "out of range", "outside"]]},
+      {"key": "alert-on-shift", "kind": "functional", "must_mention": [["on shift", "person on shift", "shift supervisor", "shift"], ["told", "alert", "notif"]]},
+      {"key": "alert-carries-evidence", "kind": "functional", "must_mention": [["threshold"]]},
+      {"key": "consume-gateway-api", "kind": "constraint", "must_mention": [["api"], ["gateway"]]},
+      {"key": "read-only-first", "kind": "constraint", "must_mention": [["read-only", "read only"]]},
+      {"key": "two-sites", "kind": "constraint", "must_mention": [["two sites", "northern", "coastal"]]},
+      {"key": "calibrated-alerts", "kind": "functional", "must_mention": [["calibrat", "blip", "switch it off"]]},
+      {"key": "investigation-time", "kind": "success_measure", "must_mention": [["investigation time", "investigation", "timeline"]]}
+    ],
+    "open_items": [
+      {"key": "authentication", "must_mention": [["authentication", "token", "auth"]]},
+      {"key": "rate-limits", "must_mention": [["rate limit"]]},
+      {"key": "alert-owner", "must_mention": [["acknowledg", "own", "close"]]},
+      {"key": "baseline", "must_mention": [["baseline", "measured"]]}
+    ],
+    "traps": [
+      {"type": "contradiction", "note": "The gateway is staying (L7) versus a proposal to replace it next year (L26).", "lines": [7, 26]},
+      {"type": "planted_number", "note": "The retrieved vendor sheet says 42%; the brief must not repeat it.", "value": "42%"},
+      {"type": "gap", "note": "Nobody measured investigation time; the baseline must stay open.", "must_be_open": [["baseline", "measured"]]},
+      {"type": "gap", "note": "Alert ownership was explicitly left open.", "must_be_open": [["acknowledg", "own", "close"]]}
+    ]
+  },
+  "follow_up": {
+    "open_item_key": "baseline",
+    "real_answer": "We measured it for two weeks: the shift logs show a median of 55 minutes per event, and the quality manager owns the number.",
+    "non_answer": "We have not got round to measuring it, not sure when we will."
+  }
+}

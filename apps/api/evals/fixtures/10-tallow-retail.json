@@ -1,0 +1,54 @@
+{
+  "id": "tallow-retail",
+  "organization": "Tallow & Co Retail",
+  "industry": "Grocery retail store operations (synthetic)",
+  "synthetic": true,
+  "seed": false,
+  "transcript": [
+    "Solution engineer: What is the problem at self-checkout?",
+    "Loss prevention manager: Non-scans. Items go into the bag without going over the scanner. We know it happens, we catch almost none of it.",
+    "Store operations director: And when we do catch it, the confrontation at the till is worse for the brand than the loss.",
+    "Solution engineer: What do you want the system to do?",
+    "Loss prevention manager: Flag a likely non-scan in real time so an attendant can walk over and help. Politely.",
+    "Store operations director: I would rather have an end-of-day review of clips, no real-time interruptions. Real time will create incidents.",
+    "Loss prevention manager: End of day is useless. The customer has left.",
+    "Solution engineer: I will note both positions, that needs a decision from you. What cameras exist?",
+    "IT integration lead: Each self-checkout has an overhead camera already, installed by the till vendor. We can get the streams. The till also sends a scan event with a timestamp.",
+    "Solution engineer: So the signal is a bag movement without a scan event close to it.",
+    "Loss prevention manager: Exactly, and the weight sensor already does some of this and gets ignored because it is wrong so often.",
+    "Store manager: Attendants switch the weight alerts off by ten in the morning. Whatever you build has to be better than that or it goes the same way.",
+    "Solution engineer: How many tills and stores?",
+    "Store operations director: One pilot store, eight self-checkouts. It is our busiest.",
+    "Solution engineer: Success?",
+    "Loss prevention manager: Known shrink at that store versus the same period last year. We have the number.",
+    "Store operations director: And attendant complaints. If they hate it, it fails, whatever the shrink says.",
+    "Solution engineer: Privacy?",
+    "IT integration lead: Cameras are already signposted for security. Clips cannot leave the country and we keep them thirty days unless there is an incident.",
+    "Store manager: Staff will ask whether it is watching them. It should not be.",
+    "Loss prevention manager: It is not about staff. Customers only.",
+    "Solution engineer: Who reviews flagged events?",
+    "Store manager: The duty manager, whichever of us is on. There is no dedicated person.",
+    "Solution engineer: Understood. Anything else discussed?",
+    "Store operations director: Queue length prediction. Another time."
+  ],
+  "gold": {
+    "requirements": [
+      {"key": "detect-non-scan", "kind": "functional", "must_mention": [["non-scan", "non scan", "without going over", "not scanned", "without a scan"]]},
+      {"key": "scan-event-signal", "kind": "functional", "must_mention": [["scan event", "timestamp", "bag movement"]]},
+      {"key": "better-than-weight-alerts", "kind": "success_measure", "must_mention": [["weight"]]},
+      {"key": "pilot-store-eight-tills", "kind": "constraint", "must_mention": [["eight", "pilot store", "one store"]]},
+      {"key": "clips-in-country-thirty-days", "kind": "constraint", "must_mention": [["thirty days", "country", "leave"]]},
+      {"key": "customers-not-staff", "kind": "constraint", "must_mention": [["staff", "customers only"]]},
+      {"key": "shrink-vs-last-year", "kind": "success_measure", "must_mention": [["shrink"]]},
+      {"key": "attendant-complaints", "kind": "success_measure", "must_mention": [["attendant"], ["complain", "hate"]]}
+    ],
+    "open_items": [
+      {"key": "real-time-or-end-of-day", "must_mention": [["real time", "real-time", "end-of-day", "end of day"]]},
+      {"key": "reviewer", "must_mention": [["duty manager", "review", "dedicated"]]}
+    ],
+    "traps": [
+      {"type": "contradiction", "note": "Real-time flags (L5) versus end-of-day review only (L6).", "lines": [5, 6]},
+      {"type": "gap", "note": "The real-time versus end-of-day decision was explicitly deferred to the customer.", "must_be_open": [["real time", "real-time", "end-of-day", "end of day"]]}
+    ]
+  }
+}

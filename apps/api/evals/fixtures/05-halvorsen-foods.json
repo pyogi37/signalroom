@@ -1,0 +1,63 @@
+{
+  "id": "halvorsen-foods",
+  "organization": "Halvorsen Foods",
+  "industry": "Food packaging plant (synthetic)",
+  "synthetic": true,
+  "seed": false,
+  "transcript": [
+    "Solution engineer: What is the pain?",
+    "Plant manager: We lose more time on changeovers than on breakdowns and we cannot say exactly where. Four packing lines, each changes over three or four times a day.",
+    "Production supervisor: Three lines. Line four has been down since spring.",
+    "Plant manager: Three running, four installed. Fine.",
+    "Continuous improvement lead: We do manual time studies twice a year. They are out of date the week after.",
+    "Solution engineer: What signals exist on the lines?",
+    "Controls engineer: Each line has a PLC with run, stop and fault states, and the reason codes operators enter. The codes are mostly \"other\".",
+    "Solution engineer: Can the PLC states be read without touching the line?",
+    "Controls engineer: Yes, through the historian. Read-only OPC access is already set up for the energy dashboard.",
+    "Production supervisor: The operators will not enter better codes just because you ask. They are busy.",
+    "Solution engineer: So what would help?",
+    "Continuous improvement lead: Seeing the changeover as steps, with the gap between the last good pack and the first good pack after it, per line, per shift.",
+    "Plant manager: And a weekly view I can put in front of the shift leads.",
+    "Solution engineer: Is there a camera on the lines?",
+    "Production supervisor: One per line, for quality disputes. Not great angles.",
+    "Controls engineer: I would rather not depend on the cameras. The PLC data is enough to start.",
+    "Solution engineer: Agreed for a first phase. What is the baseline?",
+    "Continuous improvement lead: The last time study said forty minutes average changeover on line two. I do not trust it for the others.",
+    "Plant manager: Use it anyway. It is what the board has seen.",
+    "Continuous improvement lead: I would rather we measured for two weeks first.",
+    "Solution engineer: Who owns changeover time as a number?",
+    "Plant manager: Me, ultimately. The supervisors own it per shift.",
+    "Solution engineer: Any constraints on data or access?",
+    "Controls engineer: Nothing writes to the PLCs. Historian access is read-only and stays that way. Data can go to our cloud tenant, IT already approved that for the energy work.",
+    "Production supervisor: Operators must be told what it is. Last time someone put a screen up without saying why and it went badly.",
+    "Solution engineer: Noted. Anything else you discussed that we should park?",
+    "Plant manager: Predicting breakdowns. Everyone wants it, nobody has the data for it."
+  ],
+  "gold": {
+    "requirements": [
+      {"key": "changeover-steps", "kind": "functional", "must_mention": [["changeover"], ["per line", "per shift", "line", "shift"]]},
+      {"key": "weekly-view", "kind": "functional", "must_mention": [["weekly"]]},
+      {"key": "historian-read-only", "kind": "constraint", "must_mention": [["historian", "opc", "read-only", "read only"]]},
+      {"key": "no-plc-writes", "kind": "constraint", "must_mention": [["write", "writes"]]},
+      {"key": "cloud-tenant-ok", "kind": "constraint", "must_mention": [["cloud"]]},
+      {"key": "operators-informed", "kind": "constraint", "must_mention": [["told", "inform", "communicat", "operators"]]},
+      {"key": "plc-not-cameras", "kind": "constraint", "must_mention": [["camera"]]},
+      {"key": "changeover-time-measure", "kind": "success_measure", "must_mention": [["changeover time", "changeover", "baseline"]]}
+    ],
+    "open_items": [
+      {"key": "baseline", "must_mention": [["baseline", "time study", "measure", "forty minutes"]]},
+      {"key": "reason-codes", "must_mention": [["reason code", "codes", "other"]]},
+      {"key": "line-count", "must_mention": [["line four", "line 4", "four lines", "three lines", "installed"]]}
+    ],
+    "traps": [
+      {"type": "contradiction", "note": "Four packing lines (L2) versus three, line four is down (L3).", "lines": [2, 3]},
+      {"type": "contradiction", "note": "Use the old time study as baseline (L19) versus measure for two weeks first (L20).", "lines": [19, 20]},
+      {"type": "gap", "note": "The baseline is disputed and must stay open.", "must_be_open": [["baseline", "time study", "measure", "forty minutes"]]}
+    ]
+  },
+  "follow_up": {
+    "open_item_key": "baseline",
+    "real_answer": "Agreed with the plant manager: measure all three running lines for two weeks before go-live and use that as the baseline, with the CI lead owning the number.",
+    "non_answer": "TBC, the plant manager and the CI lead still disagree."
+  }
+}

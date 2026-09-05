@@ -1,0 +1,59 @@
+{
+  "id": "lattice-rail-maintenance",
+  "organization": "Lattice Rail Maintenance",
+  "industry": "Rail infrastructure maintenance (synthetic)",
+  "synthetic": true,
+  "seed": false,
+  "transcript": [
+    "Solution engineer: What do the inspection reports look like today?",
+    "Inspection team lead: Free text. An inspector walks a section, writes what they saw on a tablet, and it lands in a folder. Some are two lines, some are two pages.",
+    "Head of track maintenance: We get around three hundred a week across the region. The planners read them on Monday and by Wednesday the urgent ones are found.",
+    "Safety assurance lead: Sometimes the urgent ones are found on Friday. That is the problem.",
+    "Solution engineer: What should happen instead?",
+    "Head of track maintenance: Anything that mentions a defect class we treat as urgent should be at the top of the list the same day, with the sentence that triggered it.",
+    "Inspection team lead: The inspectors use their own words. \"Wet bed\", \"pumping\", \"voiding\" all mean roughly the same thing to us.",
+    "Solution engineer: Is there an agreed list of urgent defect classes?",
+    "Safety assurance lead: There is a standard with categories. I can send it. It is the only list that counts.",
+    "Solution engineer: How accurate does the triage need to be?",
+    "Safety assurance lead: It must never miss an urgent one. False alarms we can live with.",
+    "Head of track maintenance: Within reason. If everything is urgent, nothing is.",
+    "Data manager: The reports are in a document store with an API. Some are photos of handwritten notes, maybe one in ten.",
+    "Solution engineer: Are those in scope?",
+    "Data manager: Not for a first pass. Typed reports only.",
+    "Solution engineer: Who would review what the system flags?",
+    "Head of track maintenance: The planners, in their Monday session, but daily if the flags are worth it.",
+    "Inspection team lead: Please do not change the form the inspectors fill in. Every time someone does, quality drops for months.",
+    "Solution engineer: Understood, no change to the input. How will you judge success?",
+    "Safety assurance lead: Take last year's reports, run them through, and see whether the ones that became urgent work orders come out on top.",
+    "Data manager: We can link reports to work orders for about eighty percent of last year.",
+    "Head of track maintenance: If it finds what we already found, faster, that is enough for a pilot.",
+    "Solution engineer: Any constraints on where the text goes?",
+    "Data manager: Reports contain locations and inspector names. They cannot leave our tenant. Any model has to run inside it or be approved by the data office.",
+    "Safety assurance lead: And nothing the system says replaces an inspector's judgement. It is a sorting aid.",
+    "Solution engineer: Anything discussed we should leave out?",
+    "Head of track maintenance: Predicting where defects will appear. Later, if this works."
+  ],
+  "gold": {
+    "requirements": [
+      {"key": "urgent-same-day", "kind": "functional", "must_mention": [["urgent"], ["same day", "top of the list", "sentence", "triggered"]]},
+      {"key": "inspector-vocabulary", "kind": "functional", "must_mention": [["wet bed", "own words", "synonym", "vocabulary", "pumping"]]},
+      {"key": "standard-categories", "kind": "constraint", "must_mention": [["standard", "categor"]]},
+      {"key": "never-miss-urgent", "kind": "success_measure", "must_mention": [["never miss", "miss", "recall", "false alarm"]]},
+      {"key": "typed-only", "kind": "constraint", "must_mention": [["typed", "handwritten"]]},
+      {"key": "no-form-change", "kind": "constraint", "must_mention": [["form"]]},
+      {"key": "data-stays-in-tenant", "kind": "constraint", "must_mention": [["tenant", "leave", "data office"]]},
+      {"key": "sorting-aid", "kind": "constraint", "must_mention": [["judgement", "judgment", "sorting aid", "replace"]]},
+      {"key": "historical-replay", "kind": "success_measure", "must_mention": [["last year", "historical", "work orders"]]}
+    ],
+    "open_items": [
+      {"key": "urgent-standard-list", "must_mention": [["standard", "list", "categor"]]},
+      {"key": "model-hosting", "must_mention": [["tenant", "data office", "approv", "hosting", "run inside"]]},
+      {"key": "review-cadence", "must_mention": [["daily", "monday", "cadence", "how often"]]},
+      {"key": "label-coverage", "must_mention": [["eighty", "80", "link", "remaining", "twenty"]]}
+    ],
+    "traps": [
+      {"type": "gap", "note": "The standard with urgent categories has not been received.", "must_be_open": [["standard", "list", "categor"]]},
+      {"type": "gap", "note": "Whether a model may run outside the tenant needs data office approval.", "must_be_open": [["tenant", "data office", "approv", "hosting", "run inside"]]}
+    ]
+  }
+}
