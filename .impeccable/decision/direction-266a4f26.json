@@ -1,0 +1,152 @@
+{
+  "title": "Choose the visual world for the review workspace",
+  "question": "The roll assigned the Lab Notebook. Keep it, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Witnessed Lab Notebook",
+      "kicker": "THE ROLL",
+      "lineage": "bound engineering lab notebooks: numbered entries, quadrille pages, nothing erased, a witness signs each page",
+      "thesis": "A room is a numbered notebook entry: every claim is written against a line, nothing is erased, and a witness signs the page.",
+      "palette": ["#f7f8f5", "#dfe4e0", "#1c2230", "#1f6f4a", "#b3261e", "#9a5b00"],
+      "materials": ["quadrille paper grid", "carbon ink", "tabular numerals", "struck-through entries that stay legible", "witness signature block"],
+      "viewport": "A page spine across the top carries the six stages as entry headers. Left, the entry index: claims as numbered lines with their L-references printed. Centre, the page itself: the brief written in ruled sections, each fact carrying its line tag, dropped claims struck through but present. Right, the witness block: verdict, decision controls, provenance. Dark rendition is the same page under a bench lamp, not an inverted theme.",
+      "risk": "Paper grid and struck entries can read as skeuomorphic decoration if they are drawn as texture instead of used as structure.",
+      "raised": [
+        {"from": "challenger-six-pack", "raise": "Every revision shows what changed since the previous one, not only the current state (trend as well as value)."},
+        {"from": "challenger-busytown", "raise": "Every claim wears its line label in print, at all times, never only on hover."},
+        {"from": "challenger-deep-dive", "raise": "One vertical axis rules the page: transcript line numbers are the spine every quote, finding and answer hangs from."},
+        {"from": "challenger-ikeda", "raise": "Two-tone data discipline: numerals are tabular and monochrome; colour exists only for verified, caution and void."},
+        {"from": "challenger-cloud-quarry", "raise": "One active edge: a single ruled marker names the current entry; nothing else glows."}
+      ],
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "page spine: six stage headers", "x": 0, "y": 0, "w": 12, "h": 1},
+        {"label": "entry index: claims with L-refs", "x": 0, "y": 1, "w": 3, "h": 9},
+        {"label": "notebook page: brief in ruled sections, struck entries visible", "x": 3, "y": 1, "w": 6, "h": 9},
+        {"label": "witness block: verdict, approve, request changes, provenance", "x": 9, "y": 1, "w": 3, "h": 9, "accent": true}
+      ]},
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "The Review Request",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "architecture decision records reviewed in a code host: diff gutters, margin comments, approve or request changes",
+      "thesis": "The brief is a pull request against the conversation: line-numbered evidence in the gutter, findings as margin comments, approval as the merge.",
+      "palette": ["#f9fafb", "#1f2328", "#116329", "#a40e26", "#0550ae"],
+      "materials": ["monospaced gutter numbers", "inline diff colour", "margin comment threads", "status checks"],
+      "viewport": "A PR-style header with the room and its checks. Left, the changed files as claims. Centre, the brief as a diff against the transcript with line numbers in the gutter and critic findings as comment threads. Right, the review panel: approve, request changes, comment.",
+      "risk": "The most familiar destination for this audience; it is where most runs in this category would land, and it borrows a code host's vocabulary rather than owning one.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "PR header with checks", "x": 0, "y": 0, "w": 12, "h": 1},
+        {"label": "claims as changed files", "x": 0, "y": 1, "w": 3, "h": 9},
+        {"label": "brief as diff with gutter and margin comments", "x": 3, "y": 1, "w": 7, "h": 9},
+        {"label": "review panel", "x": 10, "y": 1, "w": 2, "h": 9, "accent": true}
+      ]},
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-ticket-wallet",
+      "label": "The Coupon Book",
+      "verdict": "competitive",
+      "lineage": "jet-age airline ticket wallets: carbon-copy coupons, one leg per sheet, VOID stamps",
+      "thesis": "Each stage is a coupon in a wallet; a dropped claim is stamped void, never deleted, and the wallet always shows what remains.",
+      "palette": ["#fbfaf7", "#1b2a6b", "#c8102e", "#5b3a8c"],
+      "materials": ["coupon stock", "carbon numerals", "ruled fare boxes", "VOID stamp"],
+      "viewport": "Wallet tabs across the top, one per stage. The open coupon shows that stage's output in ruled boxes with carbon numerals for line references. The stub column on the right holds the decision.",
+      "case": "Fuses cleanly on states: cancel-not-delete is exactly how dropped claims and rejected answers behave, and one leg per sheet matches the stage sequence. Loses on identification: solution engineers do not see themselves in travel ephemera.",
+      "risk": "Reads as a costume when the coupon chrome outweighs the evidence it holds.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "wallet tabs: one per stage", "x": 0, "y": 0, "w": 12, "h": 1},
+        {"label": "open coupon: stage output in ruled boxes", "x": 0, "y": 1, "w": 9, "h": 9},
+        {"label": "stub: decision", "x": 9, "y": 1, "w": 3, "h": 9, "accent": true}
+      ]},
+      "comp": ".impeccable/mocks/decision/challenger-ticket-wallet.webp",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet.webp"
+    },
+    {
+      "id": "challenger-six-pack",
+      "label": "Night Instrument Panel",
+      "verdict": "declined",
+      "lineage": "a small aircraft's six-pack of luminous gauges",
+      "thesis": "Six calm gauges, one per stage, cross-checked in a sweep.",
+      "palette": ["#0b0c0e", "#e6e6e6", "#7cff7c", "#ffb300"],
+      "materials": ["matte black panel", "luminous markings", "damped needles"],
+      "viewport": "Two rows of three gauges, a placard beneath each.",
+      "case": "Gauges cannot carry quoted evidence, and a panel of dials is the dashboard the brief rules out.",
+      "kept": "Show trend as well as value: every revision displays what changed.",
+      "risk": "Reads as a dashboard the moment text has to live inside it.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-night-flight-six-pack-hero.webp"
+    },
+    {
+      "id": "challenger-ikeda",
+      "label": "Datamatics Field",
+      "verdict": "declined",
+      "lineage": "Ikeda's black-and-white data fields",
+      "thesis": "Hairline bars and monospaced numerals at data density, with a full-frame inversion.",
+      "palette": ["#000000", "#ffffff"],
+      "materials": ["hairline bars", "one monospace face", "frame inversion"],
+      "viewport": "A wall of columns with numerals in the margin.",
+      "case": "Hostile to reading a quote, and strobing has no place in a review tool.",
+      "kept": "Total commitment to tabular, monochrome numerals; colour only when it means something.",
+      "risk": "Unreadable evidence.",
+      "hero": "https://impeccable.style/worlds/cards/ikeda-datamatics-hero.webp"
+    },
+    {
+      "id": "challenger-busytown",
+      "label": "Cross-section Spread",
+      "verdict": "declined",
+      "lineage": "picture-book cutaway scenes where every object wears a printed label",
+      "thesis": "One continuous labelled scene; enter a building and its wall swings away.",
+      "palette": ["#f4efe3", "#c0392b", "#f1c40f", "#27ae60", "#6b4a2b"],
+      "materials": ["gouache flats", "hairline label pointers", "cutaway facades"],
+      "viewport": "A single panning scene with labels on everything.",
+      "case": "Hiring leads will not identify with a picture book, but its one rule is right: label everything, in print.",
+      "kept": "Every claim wears its line label at all times, not on hover.",
+      "risk": "Childlike register for a professional audience.",
+      "hero": "https://impeccable.style/worlds/cards/graphic-worlds-publishing-busytown-cross-section-hero.webp"
+    },
+    {
+      "id": "challenger-cloud-quarry",
+      "label": "Cloud Quarry",
+      "verdict": "declined",
+      "lineage": "a surreal quarry where weather is cut into blocks",
+      "thesis": "Sections stacked like cut blocks with one silver saw line as the active edge.",
+      "palette": ["#f5f7fa", "#9fc3ff", "#5d6570", "#c0c8d0"],
+      "materials": ["block masses", "one silver active edge", "stencil caps"],
+      "viewport": "Stacked blocks with deep gaps between sections.",
+      "case": "Nothing in a discovery review is a cloud; the metaphor carries no product fact.",
+      "kept": "One active edge: a single ruled marker for the current entry.",
+      "risk": "Pure decoration.",
+      "hero": "https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-cloud-quarry-hero.webp"
+    },
+    {
+      "id": "challenger-deep-dive",
+      "label": "Mesophotic Dive Profile",
+      "verdict": "declined",
+      "lineage": "a technical dive down a volcanic wall, one vertical depth axis ruling every line",
+      "thesis": "Everything pinned to its exact depth on one vertical axis.",
+      "palette": ["#061a33", "#0b2f5b", "#00d1ff", "#ffffff"],
+      "materials": ["depth axis", "dive-computer digits", "marine snow texture"],
+      "viewport": "A vertical profile with observations pinned by depth.",
+      "case": "No one reviewing a brief thinks in metres of depth, but one vertical axis that every note hangs from is the right skeleton for line-referenced evidence.",
+      "kept": "One vertical line axis rules the page.",
+      "risk": "Atmosphere without a task.",
+      "hero": "https://impeccable.style/worlds/cards/rivers-tides-ocean-depths-mesophotic-deep-dive-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code", "toggle": false},
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The AI workbench everyone ships: sidebar navigation, cards, status pills, an assistant panel, executed impeccably.",
+    "palette": ["#ffffff", "#111827", "#2563eb", "#f3f4f6"],
+    "materials": ["clean grid", "rounded cards", "status pills"],
+    "viewport": "Sidebar, header, a grid of cards, a right-hand assistant panel.",
+    "risk": "Indistinguishable from every other AI tool by design, and the brief named it as what would feel wrong.",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}
