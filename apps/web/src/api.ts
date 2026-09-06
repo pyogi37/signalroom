@@ -45,6 +45,7 @@ export const api = {
   trace: (id: string) => request<TraceStep[]>(`/api/rooms/${id}/trace`),
   audit: (id: string) => request<AuditEvent[]>(`/api/rooms/${id}/audit`),
   fixtures: () => request<FixtureSummary[]>('/api/fixtures'),
+  seed: () => request<{ seeded: string[]; skipped: string[] }>('/api/rooms/seed', { method: 'POST' }),
   evaluation: () => request<EvaluationSummary>('/api/evaluation/latest'),
   uploadKnowledge: (file: File, title = '') => {
     const form = new FormData()

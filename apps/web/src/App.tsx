@@ -117,6 +117,20 @@ export function App() {
     }
   }
 
+  async function loadRecordedRooms() {
+    setBusy('loading'); setNotice(null); setBanner(null)
+    try {
+      const outcome = await api.seed()
+      const list = await refreshRooms()
+      if (list[0]) await loadRoom(list[0].id)
+      if (!outcome.seeded.length) setBanner({ tone: 'warn', text: outcome.skipped.length ? `No recordings for ${outcome.skipped.join(', ')} yet. Run the evaluation suite in record mode to create them.` : 'Every bundled room is already open.' })
+    } catch (error) {
+      setBanner(describeError(error))
+    } finally {
+      setBusy(null)
+    }
+  }
+
   function sendAnswers() {
     if (!room) return
     const payload = room.open_items.filter(item => item.status === 'open' && answers[item.id]?.trim()).map(item => ({ open_item_id: item.id, answer: answers[item.id].trim() }))
@@ -162,7 +176,7 @@ export function App() {
     <section className="workspace" aria-busy={busy !== null}>
       <Sidebar rooms={rooms} room={room} selectedClaim={selectedClaim} onSelectRoom={id => { setNotice(null); loadRoom(id).catch(error => setBanner(describeError(error))) }} onSelectClaim={setSelectedClaim} onNewRoom={() => setComposer(true)}/>
       {room ? <Docket room={room} selectedClaim={selectedClaim} answers={answers} onAnswer={(id, value) => setAnswers(current => ({ ...current, [id]: value }))} onSendAnswers={sendAnswers} busy={busy === 'deciding'}/>
-        : <article className="evidence-docket empty-docket">{busy === 'loading' ? <p>Loading…</p> : <><h2>No room yet</h2><p>Open a recorded room from the list, or start a new one from a synthetic transcript. Without a model key, only recorded rooms can be opened.</p><button className="button button-primary" onClick={() => setComposer(true)}><Plus size={16}/> New room</button></>}</article>}
+        : <article className="evidence-docket empty-docket">{busy === 'loading' ? <p>Loading…</p> : <><h2>No room yet</h2><p>Open the bundled synthetic rooms from recorded model runs, or start a new one from a transcript. Without a model key, only recorded rooms can be opened.</p><div className="empty-actions"><button className="button button-primary" onClick={loadRecordedRooms}>Load recorded rooms</button><button className="button button-secondary" onClick={() => setComposer(true)}><Plus size={16}/> New room</button></div></>}</article>}
       {room ? <DecisionPanel room={room} audit={audit} trace={trace} busy={busy === 'deciding'} notice={notice}
         onApprove={() => decide({ kind: 'approve' }, 'Brief approved. The workflow reached its end and the decision is in the audit trail.')}
         onRequestChanges={note => decide({ kind: 'request_changes', note }, 'Changes requested. Design and critique ran again with your note.')}/>

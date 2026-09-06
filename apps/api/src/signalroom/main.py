@@ -60,6 +60,12 @@ def rooms() -> list[dict]:
     return list_rooms()
 
 
+@app.post("/api/rooms/seed")
+def seed() -> dict[str, list[str]]:
+    """Open the bundled synthetic rooms from recorded model runs. Never calls a model."""
+    return seed_rooms()
+
+
 @app.get("/api/fixtures")
 def fixtures() -> list[dict]:
     """Synthetic example transcripts the composer can load. All invented."""

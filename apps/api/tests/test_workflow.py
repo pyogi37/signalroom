@@ -218,3 +218,11 @@ def test_capabilities_and_knowledge_endpoints(client):
     fixtures = client.get("/api/fixtures").json()
     assert len(fixtures) == 10 and all(item["lines"] >= 20 for item in fixtures)
     assert {item["id"] for item in fixtures if item["seeded"]} == {"northstar-cold-chain", "kestrel-yard-logistics", "meridian-regional-hospital", "orion-ground-services"}
+
+
+def test_seed_endpoint_never_calls_a_model():
+    # A plain client: no fake model, no recordings in the test environment, replay mode. Seeding must skip, not call anything.
+    from signalroom.main import app
+    outcome = TestClient(app).post("/api/rooms/seed").json()
+    assert outcome["seeded"] == []
+    assert set(outcome["skipped"]) == {"northstar-cold-chain", "kestrel-yard-logistics", "meridian-regional-hospital", "orion-ground-services"}

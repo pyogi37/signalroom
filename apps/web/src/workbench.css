@@ -114,3 +114,5 @@
   .composer-row { grid-template-columns: 1fr; gap: 0; }
   .banner { margin: 12px 18px 0; }
 }
+
+.empty-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
