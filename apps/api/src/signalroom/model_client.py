@@ -142,7 +142,12 @@ def _live(system: str, user: str, schema: type[T], stage: str, key: str, tempera
     extra_body: dict = {}
     if "openrouter.ai" in base_url():
         # Only route to providers that honour every parameter we send, including the JSON schema.
+        # SIGNALROOM_MODEL_PROVIDER_ORDER (comma-separated provider slugs) prefers fast providers first;
+        # it changes latency and price, not the prompt, so recordings stay valid.
         extra_body["provider"] = {"require_parameters": True}
+        order = [slug.strip() for slug in env("SIGNALROOM_MODEL_PROVIDER_ORDER").split(",") if slug.strip()]
+        if order:
+            extra_body["provider"].update({"order": order, "allow_fallbacks": True})
     started = perf_counter()
     try:
         completion = client.chat.completions.parse(

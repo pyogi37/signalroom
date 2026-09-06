@@ -19,3 +19,6 @@ apps/api/data/
 
 # Evaluation run history (latest.json is committed; per-run copies are not)
 apps/api/evals/results/history/
+
+# Local Claude Code launch config (developer ports)
+.claude/

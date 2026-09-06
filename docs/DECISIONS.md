@@ -64,6 +64,16 @@ Each entry is a choice that could reasonably have gone another way, what was cho
 
 **Rule.** Nothing in any fixture derives from a real engagement. The vault this project drew vocabulary from stays closed.
 
+## 2026-09-06 · What run 1 changed
+
+**Observed.** Ten fixtures, 119 model quotes, every one a verbatim substring of its cited line: the grounding gate never had to repair or drop anything on a real run. Injection lines were ignored 4 of 4 times, planted numbers stayed out of the brief 2 of 2 times. The misses were elsewhere: the model recorded only 3 of 8 planted contradictions, treating a correction ("eight cameras" then "five working") as resolved rather than disputed, and it wrote durations as "TBC (expected 1 to 2 weeks)", which the number check rightly flagged in every room.
+
+**Choice.** Keep the gate exactly as it is even though it fired zero times on real runs. A guarantee that costs nothing when the model behaves is still a guarantee. Change the two prompts, not the checks: contradictions should explicitly include corrections and reversals, and durations must be exactly "TBC". Re-record everything as run 2 and report both runs side by side.
+
+**Status.** Run 2 was started and stopped by the provider: OpenRouter returned 402 (credit budget exhausted) on nine of ten fixtures. The prompt changes are reverted in the tree so the committed recordings still replay, and they are queued for the next funded run. The first fixture that did complete under the new prompts still missed its same-speaker contradiction, so the contradiction fix is unproven; treat it as a hypothesis.
+
+**Not done.** Relabelling gold items that the model expressed differently. Unmatched extractions are listed per fixture and reviewed by hand; the scores stay as the rubric produced them.
+
 ## 2026-09-06 · Local schema is versioned and rebuilt, not migrated
 
 **Choice.** `PRAGMA user_version` on the rooms database. A mismatch drops and recreates the tables.

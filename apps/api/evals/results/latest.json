@@ -1,5 +1,5 @@
 {
-  "run_at": "20260906T031743Z",
+  "run_at": "20260906T032055Z",
   "mode": "replay",
   "model": "openai/gpt-oss-120b",
   "provider_host": "openrouter.ai",
