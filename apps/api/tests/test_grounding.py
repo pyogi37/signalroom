@@ -1,4 +1,4 @@
-from signalroom.grounding import check_brief, ground_extraction, is_real_answer, numbers_in
+from signalroom.grounding import check_brief, ground_extraction, is_real_answer, number_words_to_digits, numbers_in, similar_questions
 from signalroom.models import (
     BriefDraft,
     Constraint,
@@ -193,3 +193,33 @@ def test_numbers_present_in_transcript_are_not_flagged():
         utterances, [],
     )
     assert findings == []
+
+
+def test_number_words_become_digits_for_the_known_number_set():
+    assert number_words_to_digits("keeps thirty days, six weeks, a dozen bays, twenty-five km, two sites") == "keeps 30 days, 6 weeks, a 12 bays, 25 km, 2 sites"
+    assert numbers_in(number_words_to_digits("Six weeks is what I can defend")) == ["6"]
+
+
+def test_unicode_hyphens_and_narrow_spaces_do_not_leak_ids_or_numbers():
+    assert numbers_in("see UC‑02 and REQ‑07 in Phase 1") == []
+    assert numbers_in("Phase 0 – Ingestion PoC lasting 1–2 weeks") == ["1", "2"]
+
+
+def test_similar_questions_catches_reworded_duplicates():
+    assert similar_questions("Exact authentication mechanism for the gateway API", "Exact authentication mechanism for the gateway API (static token, OAuth, etc.)")
+    assert similar_questions("API rate-limit details", "API rate‑limit details (calls per minute/second)")
+    assert similar_questions("Confirmation of historical data retention period (is it exactly 30 days?)", "Confirm exact historical-data retention period (exact days)")
+    assert not similar_questions("Who acknowledges alerts?", "What baseline exists for investigation time?")
+
+
+def test_number_findings_are_grouped_per_location_with_word_numbers_grounded():
+    utterances = segment("IT architect: Historical readings, I believe it keeps thirty days.\nSponsor: Six weeks is what I can defend to the board.")
+    cleaned, findings = check_brief(
+        draft(snapshot=Snapshot(one_line_goal="Run a 6 week pilot with 30 days of history and 48 hours to fix", scope_summary="s", deployment_shape="TBC", stakeholder_roles=[]),
+              recommendation=Recommendation(approach="Weekly review", phases=[], discussed_not_in_scope=[]), success_measures=[], readiness=[], constraints=[], risks=[]),
+        utterances, RETRIEVED,
+    )
+    numbers = [item for item in findings if item.kind == "unverified_number"]
+    assert len(numbers) == 1
+    assert numbers[0].location == "snapshot.one_line_goal" and numbers[0].severity == "high"
+    assert "'48'" in numbers[0].text and "'6'" not in numbers[0].text and "'30'" not in numbers[0].text

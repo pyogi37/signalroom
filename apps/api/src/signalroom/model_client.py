@@ -12,9 +12,10 @@ what happens:
 - `replay`: read the recording; never call the network. Raise
   `ModelUnavailable` if there is no recording.
 - `live`: always call the network; never write a recording.
-- `record`: call the network and write the recording.
+- `record`: use a recording when one exists, otherwise call the network and
+  write one. Delete a recording file to force it to be taken again.
 - `auto` (default): use a recording when one exists, otherwise call live if a
-  key is configured, otherwise raise `ModelUnavailable`.
+  key is configured, otherwise raise `ModelUnavailable`. Never writes.
 
 Recordings hold the full request text and the parsed response, so anyone can
 read exactly which prompt produced which output. All transcripts that reach
@@ -197,7 +198,7 @@ def structured_call(
     key = recording_key(model_name(), system, user, schema.__name__)
     path = recordings_dir() / f"{key}.json"
 
-    if mode == "replay" or (mode == "auto" and path.exists()):
+    if mode == "replay" or (mode in {"auto", "record"} and path.exists()):
         if not path.exists():
             raise ModelUnavailable(
                 f"Stage '{stage}' has no recorded model output and the client is in replay mode. "

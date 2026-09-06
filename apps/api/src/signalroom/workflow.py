@@ -27,7 +27,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
 from .config import data_dir
-from .grounding import check_brief, ground_extraction, is_real_answer
+from .grounding import check_brief, ground_extraction, is_real_answer, similar_questions
 from .model_client import ModelCallFailed, ModelUnavailable, structured_call
 from .models import (
     Brief,
@@ -215,14 +215,11 @@ def design(state: SolutionState) -> SolutionState:
         return _fail(state, "Design", error, started)
     draft, findings = check_brief(draft, utterances, retrieved)
 
-    known = {item.question.strip().lower() for item in open_items}
     next_index = len(open_items) + 1
     valid_lines = {item.line for item in utterances}
     for proposed in draft.additional_open_items:
-        key = proposed.question.strip().lower()
-        if key in known:
+        if any(similar_questions(proposed.question, existing.question) for existing in open_items):
             continue
-        known.add(key)
         open_items.append(OpenItem(
             id=f"OI-{next_index:02d}", question=proposed.question, why_it_matters=proposed.why_it_matters,
             suggested_owner_role=proposed.suggested_owner_role or "Unassigned",

@@ -36,9 +36,62 @@ from .models import (
 )
 
 
+_UNICODE_PUNCTUATION = str.maketrans({
+    "’": "'", "‘": "'", "“": '"', "”": '"',
+    "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "−": "-",
+    " ": " ", " ": " ", " ": " ",
+})
+
+
+def ascii_punctuation(text: str) -> str:
+    """Models emit non-breaking hyphens and narrow spaces; fold them so regexes and substring checks behave."""
+    return text.translate(_UNICODE_PUNCTUATION)
+
+
 def _normalise(text: str) -> str:
-    text = text.replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
-    return re.sub(r"\s+", " ", text).strip().lower()
+    return re.sub(r"\s+", " ", ascii_punctuation(text)).strip().lower()
+
+
+_NUMBER_WORDS = {
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
+    "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
+    "hundred": 100, "thousand": 1000, "dozen": 12,
+}
+_TENS = {"twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"}
+_NUMBER_WORD = re.compile(r"\b(" + "|".join(_NUMBER_WORDS) + r")(?:[\s-](one|two|three|four|five|six|seven|eight|nine))?\b", re.IGNORECASE)
+
+
+def number_words_to_digits(text: str) -> str:
+    """'thirty days' -> '30 days', 'twenty-five' -> '25', 'a dozen' -> '12'. Used only to build the set of numbers a speaker actually said."""
+    def replace(match: re.Match) -> str:
+        first = _NUMBER_WORDS[match.group(1).lower()]
+        second = match.group(2)
+        if second and match.group(1).lower() in _TENS:
+            return str(first + _NUMBER_WORDS[second.lower()])
+        return str(first) + (f" {second}" if second else "")
+    return _NUMBER_WORD.sub(replace, ascii_punctuation(text))
+
+
+def _content_terms(text: str) -> set[str]:
+    return {token for token in re.findall(r"[a-z0-9]+", _normalise(text)) if len(token) >= 4 and token not in _QUESTION_STOPWORDS}
+
+
+_QUESTION_STOPWORDS = {"what", "which", "when", "where", "will", "does", "have", "with", "that", "this", "from", "into", "there",
+                       "their", "about", "should", "would", "could", "exact", "exactly", "confirm", "confirmation", "details", "detail"}
+
+
+def similar_questions(a: str, b: str, threshold: float = 0.6) -> bool:
+    """Two open items are the same question when the shorter one's content terms mostly appear in the other.
+
+    Overlap coefficient rather than Jaccard, so "API rate-limit details" and
+    "API rate-limit details (calls per minute/second)" count as one question.
+    """
+    terms_a, terms_b = _content_terms(a), _content_terms(b)
+    smallest = min(len(terms_a), len(terms_b))
+    if smallest < 2:
+        return _normalise(a) == _normalise(b)
+    return len(terms_a & terms_b) / smallest >= threshold
 
 
 def locate_quote(evidence: ProposedEvidence, utterances: list[Utterance]) -> tuple[Evidence | None, str | None, int | None]:
@@ -169,12 +222,9 @@ def merge_open_items(
             result.append(carried)
 
     next_index = len(result) + 1
-    seen = {_normalise(item.question) for item in result}
     for proposed in extraction.open_items:
-        key = _normalise(proposed.question)
-        if key in seen:
+        if any(similar_questions(proposed.question, existing_item.question) for existing_item in result):
             continue
-        seen.add(key)
         related = proposed.related_line if proposed.related_line in valid_lines else None
         result.append(OpenItem(
             id=f"OI-{next_index:02d}", question=proposed.question, why_it_matters=proposed.why_it_matters,
@@ -200,7 +250,7 @@ _ORDINAL_CONTEXT = re.compile(r"\b(?:phase|step|option|stage|tier|priority|q)\s*
 
 
 def numbers_in(text: str) -> list[str]:
-    cleaned = _ID_TOKENS.sub(" ", text)
+    cleaned = _ID_TOKENS.sub(" ", ascii_punctuation(text))
     found: list[str] = []
     for match in _NUMBER.finditer(cleaned):
         token = match.group(1).replace(" ", "")
@@ -241,10 +291,10 @@ def check_brief(draft: BriefDraft, utterances: list[Utterance], retrieved: list[
     known_passages = {hit.passage_id for hit in retrieved}
     transcript_numbers = set()
     for item in utterances:
-        transcript_numbers.update(numbers_in(item.text))
+        transcript_numbers.update(numbers_in(number_words_to_digits(item.text)))
     passage_numbers: dict[str, list[str]] = defaultdict(list)
     for hit in retrieved:
-        for number in numbers_in(hit.passage):
+        for number in numbers_in(number_words_to_digits(hit.passage)):
             passage_numbers[number].append(hit.passage_id)
 
     for assessment in draft.readiness:
@@ -273,22 +323,25 @@ def check_brief(draft: BriefDraft, utterances: list[Utterance], retrieved: list[
             ))
             constraint.passage_id = None
 
-    seen: set[tuple[str, str]] = set()
+    # One finding per brief field: which numbers came from reference material and which from nowhere.
+    per_location: dict[str, tuple[list[str], list[str]]] = {}
     for location, text in _brief_text_fields(draft):
         for number in numbers_in(text):
-            if number in transcript_numbers or (number, location) in seen:
+            if number in transcript_numbers:
                 continue
-            seen.add((number, location))
-            if number in passage_numbers:
-                findings.append(Finding(
-                    kind="unverified_number", severity="medium", source="code",
-                    text=f"'{number}' in {location} comes from reference material ({', '.join(passage_numbers[number][:2])}), not from the conversation. It must be presented as pattern guidance, not as a customer fact.",
-                    location=location,
-                ))
-            else:
-                findings.append(Finding(
-                    kind="unverified_number", severity="high", source="code",
-                    text=f"'{number}' in {location} does not appear in the conversation or in any retrieved passage.",
-                    location=location,
-                ))
+            from_reference, from_nowhere = per_location.setdefault(location, ([], []))
+            bucket = from_reference if number in passage_numbers else from_nowhere
+            if number not in bucket:
+                bucket.append(number)
+    for location, (from_reference, from_nowhere) in per_location.items():
+        parts = []
+        if from_nowhere:
+            parts.append(f"{', '.join(repr(n) for n in from_nowhere)} appear{'s' if len(from_nowhere) == 1 else ''} nowhere in the conversation or the retrieved passages")
+        if from_reference:
+            sources = sorted({pid for n in from_reference for pid in passage_numbers[n][:2]})
+            parts.append(f"{', '.join(repr(n) for n in from_reference)} come{'s' if len(from_reference) == 1 else ''} from reference material ({', '.join(sources)}), not from the customer")
+        findings.append(Finding(
+            kind="unverified_number", severity="high" if from_nowhere else "medium", source="code", location=location,
+            text=f"In {location}: " + "; ".join(parts) + ". Numbers the customer did not state belong in TBC or as pattern guidance, not as facts.",
+        ))
     return draft, findings

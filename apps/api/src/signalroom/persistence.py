@@ -13,6 +13,10 @@ from .models import Room
 
 DATABASE = data_dir() / "signalroom.sqlite3"
 
+# Bump when the tables change. This is local demo state, so a mismatch rebuilds
+# the tables instead of migrating them; the recorded model runs re-seed rooms.
+SCHEMA_VERSION = 2
+
 
 def _connect() -> sqlite3.Connection:
     connection = sqlite3.connect(DATABASE)
@@ -23,6 +27,10 @@ def _connect() -> sqlite3.Connection:
 
 def initialize() -> None:
     with _connect() as connection:
+        current = int(connection.execute("PRAGMA user_version").fetchone()[0])
+        if current != SCHEMA_VERSION:
+            connection.executescript("DROP TABLE IF EXISTS rooms; DROP TABLE IF EXISTS audit_events; DROP TABLE IF EXISTS sessions;")
+            connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         connection.executescript("""
             CREATE TABLE IF NOT EXISTS rooms (
                 id TEXT PRIMARY KEY,
