@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence, LayoutGroup } from 'motion/react'
 import { Plus } from 'lucide-react'
 import { API, ApiError, api } from './api'
-import type { Capabilities, AuditEvent, EvaluationSummary, Room, RoomSummary, TraceStep } from './types'
+import type { AuditEvent, Capabilities, EvaluationSummary, Room, RoomSummary, TraceStep } from './types'
+import { Changes } from './components/Changes'
 import { Composer } from './components/Composer'
-import { DecisionPanel } from './components/DecisionPanel'
-import { Docket } from './components/Docket'
-import { Sidebar } from './components/Sidebar'
-import { StageStrip } from './components/StageStrip'
-import { percent, statusLabel } from './format'
+import { Document } from './components/Document'
+import { RequestHeader, Topbar } from './components/Header'
+import { ReviewPanel } from './components/ReviewPanel'
+import { percent } from './format'
+import { useTheme } from './theme'
 
 type Notice = { tone: 'ok' | 'warn' | 'error'; text: string } | null
 type Busy = 'loading' | 'running' | 'deciding' | null
@@ -28,13 +30,14 @@ function roomFromHash(): string | null {
 }
 
 export function App() {
+  const [theme, toggleTheme] = useTheme()
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null)
   const [rooms, setRooms] = useState<RoomSummary[]>([])
   const [room, setRoom] = useState<Room | null>(null)
   const [trace, setTrace] = useState<TraceStep[]>([])
   const [audit, setAudit] = useState<AuditEvent[]>([])
   const [evaluation, setEvaluation] = useState<EvaluationSummary | null>(null)
-  const [selectedClaim, setSelectedClaim] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [composer, setComposer] = useState(false)
   const [busy, setBusy] = useState<Busy>('loading')
@@ -45,7 +48,7 @@ export function App() {
   const loadRoom = useCallback(async (id: string) => {
     const loaded = await api.room(id)
     setRoom(loaded)
-    setSelectedClaim(loaded.requirements[0]?.id ?? loaded.use_cases[0]?.id ?? null)
+    setSelected(loaded.requirements[0]?.id ?? loaded.use_cases[0]?.id ?? null)
     setAnswers({})
     window.location.hash = `room=${id}`
     api.trace(id).then(setTrace).catch(() => setTrace([]))
@@ -67,8 +70,7 @@ export function App() {
         const wanted = roomFromHash()
         const first = list.find(item => item.id === wanted) ?? list[0]
         if (first) await loadRoom(first.id)
-        else if (!caps.live && caps.recordings === 0) setBanner({ tone: 'warn', text: 'No rooms, no recordings and no model key. Set GROQ_API_KEY in apps/api/.env to run a transcript, or run the evaluation suite in record mode to create replayable rooms.' })
-        setBanner(current => current ?? null)
+        else if (!caps.live && caps.recordings === 0) setBanner({ tone: 'warn', text: 'No rooms, no recordings and no model key. Set a key in apps/api/.env to run a transcript, or run the evaluation suite in record mode to create replayable rooms.' })
       } catch (error) {
         setBanner(describeError(error))
       } finally {
@@ -88,7 +90,7 @@ export function App() {
       await refreshRooms()
       await loadRoom(created.id)
       setComposer(false); setRetryDraft(null)
-      setNotice({ tone: 'ok', text: `Workflow paused at the gate. ${created.grounding.passed} of ${created.grounding.proposed} proposed quotes passed the check.` })
+      setNotice({ tone: 'ok', text: `Paused at the gate. ${created.grounding.passed} of ${created.grounding.proposed} proposed quotes passed the verbatim check.` })
     } catch (error) {
       const described = describeError(error)
       setRetryDraft(body)
@@ -131,6 +133,7 @@ export function App() {
     }
   }
 
+  const pendingAnswers = room ? room.open_items.filter(item => item.status === 'open' && answers[item.id]?.trim()).length : 0
   function sendAnswers() {
     if (!room) return
     const payload = room.open_items.filter(item => item.status === 'open' && answers[item.id]?.trim()).map(item => ({ open_item_id: item.id, answer: answers[item.id].trim() }))
@@ -139,50 +142,36 @@ export function App() {
   }
 
   const running = busy === 'running'
-  const completed = room?.stages.filter(stage => stage.status === 'complete').length ?? 0
-  const modelLabel = !capabilities ? '…' : capabilities.live ? `Live · ${capabilities.model}` : capabilities.recordings ? `Replay · ${capabilities.recordings} recordings` : 'No model'
+  const evalLine = evaluation ? `eval: recall ${percent(evaluation.summary.requirement_recall)} · traps ${evaluation.summary.traps.passed}/${evaluation.summary.traps.total} · quotes ${percent(evaluation.summary.grounding.pass_rate)} · ${evaluation.mode}` : null
 
-  return <main className="app-shell">
-    <header className="topbar">
-      <a className="brand" href="#" aria-label="SignalRoom home"><span className="brandmark" aria-hidden="true">S</span><span>SignalRoom</span></a>
-      <div className="room-identity">{room ? <><strong>{room.organization}</strong><span>{statusLabel[room.status]} · synthetic</span></> : <span>Synthetic solutioning workbench</span>}</div>
-      <div className="topbar-actions">
-        <span className={`model-status ${capabilities?.live ? 'live' : 'replay'}`} title={capabilities ? `${capabilities.mode} mode via ${capabilities.provider_host}` : ''}><span aria-hidden="true"/>{modelLabel}</span>
-        <button className="button button-secondary" onClick={() => setComposer(true)} disabled={busy === 'loading'}><Plus size={16}/> New room</button>
-      </div>
-    </header>
+  return <LayoutGroup>
+    <main className="shell">
+      <Topbar room={room} rooms={rooms} capabilities={capabilities} theme={theme} onToggleTheme={toggleTheme} disabled={busy === 'loading'}
+        onSelectRoom={id => { setNotice(null); loadRoom(id).catch(error => setBanner(describeError(error))) }} onNewRoom={() => setComposer(true)}/>
 
-    {banner && <div className={`banner ${banner.tone}`} role="alert">
-      <span>{banner.text}</span>
-      {retryDraft && <button className="link-button" onClick={() => { setBanner(null); setComposer(true) }}>Edit and retry</button>}
-      <button className="link-button" onClick={() => setBanner(null)} aria-label="Dismiss">Dismiss</button>
-    </div>}
+      {banner && <div className={`banner ${banner.tone}`} role="alert">
+        <span>{banner.text}</span>
+        {retryDraft && <button className="link" onClick={() => { setBanner(null); setComposer(true) }}>Edit and retry</button>}
+        <button className="link" onClick={() => setBanner(null)} aria-label="Dismiss">Dismiss</button>
+      </div>}
 
-    <section className="review-header">
-      <div className="review-heading">
-        <p>{running ? 'Workflow running' : room?.status === 'approved' ? 'Decision recorded' : room ? 'Human review required' : busy === 'loading' ? 'Loading' : 'No room selected'}</p>
-        <h1>{running ? 'Extracting, retrieving, drafting and critiquing…' : room ? (room.status === 'approved' ? `The brief for ${room.organization} is approved.` : `Review the brief for ${room.organization}.`) : busy === 'loading' ? 'Connecting to the API.' : 'Start a room from a synthetic transcript.'}</h1>
-        <span>{room ? 'Every claim carries a quote that code verified against a numbered transcript line. The critic lists what it could not support. You decide.' : `API: ${API}`}</span>
-      </div>
-      <div className="workflow-summary" aria-label={room ? `${completed} of 6 stages complete` : undefined}>
-        {room && <><div><span>{completed} of 6 stages complete</span><strong>{room.brief ? `brief r${room.brief.revision}` : ''}</strong></div>
-        <div className="progress" aria-hidden="true"><i style={{ transform: `scaleX(${completed / 6})` }}/></div></>}
-        {evaluation && <p className="eval-line">Latest eval: recall {percent(evaluation.summary.requirement_recall)} · traps {evaluation.summary.traps.passed}/{evaluation.summary.traps.total} · grounding {percent(evaluation.summary.grounding.pass_rate)} · {evaluation.mode}</p>}
-      </div>
-    </section>
+      <RequestHeader room={room} running={running} loading={busy === 'loading'} evalLine={evalLine}/>
 
-    <StageStrip stages={room?.stages ?? []} running={running}/>
+      {room && !running ? <section className="workspace" aria-busy={busy !== null}>
+        <Changes room={room} selected={selected} onSelect={setSelected}/>
+        <Document room={room} selected={selected} answers={answers} onAnswer={(id, value) => setAnswers(current => ({ ...current, [id]: value }))} onSendAnswers={sendAnswers} busy={busy === 'deciding'}/>
+        <ReviewPanel room={room} audit={audit} trace={trace} busy={busy === 'deciding'} notice={notice} pendingAnswers={pendingAnswers}
+          onApprove={() => decide({ kind: 'approve' }, 'Approved. The workflow reached its end and the decision is in the timeline.')}
+          onRequestChanges={note => decide({ kind: 'request_changes', note }, 'Changes requested. Design and critique ran again with your note.')}
+          onSendAnswers={sendAnswers}/>
+      </section> : <section className="workspace" style={{ gridTemplateColumns: '1fr' }}>
+        <article className="doc">
+          {running ? <div className="running-doc" aria-live="polite"><p className="hint">Three model calls, one gate. Twenty seconds to two minutes depending on the provider route.</p><span className="skeleton" style={{ width: '62%' }}/><span className="skeleton" style={{ width: '88%' }}/><span className="skeleton" style={{ width: '74%' }}/><span className="skeleton" style={{ width: '81%' }}/></div>
+            : <div className="empty-doc">{busy === 'loading' ? <p>Loading</p> : <><h2>No room open</h2><p>Open the bundled synthetic rooms from recorded model runs, or start a new one from a transcript. Without a model key, only recorded rooms can be opened.</p><div className="empty-actions"><button className="btn btn-primary" onClick={loadRecordedRooms}>Load recorded rooms</button><button className="btn" onClick={() => setComposer(true)}><Plus size={15}/> New room</button></div><p className="hint">API: {API}</p></>}</div>}
+        </article>
+      </section>}
 
-    <section className="workspace" aria-busy={busy !== null}>
-      <Sidebar rooms={rooms} room={room} selectedClaim={selectedClaim} onSelectRoom={id => { setNotice(null); loadRoom(id).catch(error => setBanner(describeError(error))) }} onSelectClaim={setSelectedClaim} onNewRoom={() => setComposer(true)}/>
-      {room ? <Docket room={room} selectedClaim={selectedClaim} answers={answers} onAnswer={(id, value) => setAnswers(current => ({ ...current, [id]: value }))} onSendAnswers={sendAnswers} busy={busy === 'deciding'}/>
-        : <article className="evidence-docket empty-docket">{busy === 'loading' ? <p>Loading…</p> : <><h2>No room yet</h2><p>Open the bundled synthetic rooms from recorded model runs, or start a new one from a transcript. Without a model key, only recorded rooms can be opened.</p><div className="empty-actions"><button className="button button-primary" onClick={loadRecordedRooms}>Load recorded rooms</button><button className="button button-secondary" onClick={() => setComposer(true)}><Plus size={16}/> New room</button></div></>}</article>}
-      {room ? <DecisionPanel room={room} audit={audit} trace={trace} busy={busy === 'deciding'} notice={notice}
-        onApprove={() => decide({ kind: 'approve' }, 'Brief approved. The workflow reached its end and the decision is in the audit trail.')}
-        onRequestChanges={note => decide({ kind: 'request_changes', note }, 'Changes requested. Design and critique ran again with your note.')}/>
-        : <aside className="decision-panel"><p className="audit-note">Decisions appear here once a room is open.</p></aside>}
-    </section>
-
-    {composer && <Composer busy={running} onClose={() => setComposer(false)} onSubmit={createRoom} initial={retryDraft}/>}
-  </main>
+      <AnimatePresence>{composer && <Composer key="composer" busy={running} onClose={() => setComposer(false)} onSubmit={createRoom} initial={retryDraft}/>}</AnimatePresence>
+    </main>
+  </LayoutGroup>
 }
