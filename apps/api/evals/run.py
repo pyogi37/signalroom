@@ -157,7 +157,7 @@ def render_markdown(report: dict) -> str:
         lines += ["", "Follow-up gate behaviour:", "", "| Fixture | Open item | Non-answer kept it open | Real answer closed it |", "|---|---|---|---|"]
         for row in follow_ups:
             f = row["follow_up"]
-            lines.append(f"| {row['fixture']} | {f['target']} | {f['non_answer_kept_open']} | {f['real_answer_closed']} |")
+            lines.append(f"| {row['fixture']} | {f['target']} | {f.get('non_answer_kept_open')} | {f.get('real_answer_closed')} |")
     failures = []
     for row in rows:
         if row["status"] == "failed":

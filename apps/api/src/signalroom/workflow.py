@@ -17,6 +17,7 @@ State values are plain dicts (Pydantic dumps) so the checkpointer never has
 to know about the domain classes.
 """
 
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from time import perf_counter
@@ -53,6 +54,7 @@ from .prompts import CRITIQUE_SYSTEM, DESIGN_SYSTEM, EXTRACT_SYSTEM, critique_us
 from .retrieval import store
 from .segmentation import segment, speakers
 
+log = logging.getLogger("signalroom.workflow")
 STAGE_ORDER = ["Discover", "Extract", "Retrieve", "Design", "Critique", "Gate"]
 WAITING = "Waiting for the solution engineer"
 
@@ -104,6 +106,7 @@ def _metrics(state: SolutionState, call) -> list[dict]:
 
 def _fail(state: SolutionState, stage: str, error: Exception, started: float) -> SolutionState:
     kind = "model_unavailable" if isinstance(error, ModelUnavailable) else "model_failed"
+    log.warning("Room %s: stage %s failed in mode %s: %s", state.get("room_id"), stage, state.get("model_mode") or "configured", error)
     return {
         "error": str(error), "error_kind": kind, "status": "failed",
         "stages": _stages(state, stage, "failed", str(error)[:240], (perf_counter() - started) * 1000),
