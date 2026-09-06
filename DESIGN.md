@@ -1,225 +1,176 @@
 ---
 name: SignalRoom
-description: An evidence docket for human review of AI-generated solution briefs.
+description: The Review Request. A solution brief reviewed the way engineers review code, as a pull request against the transcript, in day and night renditions of one world.
 colors:
-  decision-cobalt: "#2457d6"
-  decision-cobalt-hover: "#1948bd"
-  decision-cobalt-pressed: "#123b9f"
-  decision-cobalt-soft: "#dce7ff"
-  dossier-ink: "#172033"
-  dossier-ink-soft: "#3f4a5f"
-  annotation: "#657188"
-  canvas: "#eef1f5"
-  paper: "#ffffff"
-  paper-subtle: "#f7f8fa"
-  paper-selected: "#e9f0ff"
-  rule: "#d8dee8"
-  rule-strong: "#aab4c4"
-  verified: "#167553"
-  verified-soft: "#e0f3eb"
-  caution: "#a34b00"
-  caution-soft: "#fff0df"
-  blocked: "#a92f3a"
-  blocked-soft: "#fee9eb"
-  focus: "#7aa2ff"
+  bg: "#f6f7f4"
+  surface: "#ffffff"
+  surface-2: "#eef1ec"
+  gutter: "#f3f5f1"
+  ink: "#172120"
+  ink-2: "#48534f"
+  ink-3: "#68746f"
+  rule: "#d9dfd9"
+  rule-2: "#bcc6c0"
+  accent: "#0f6e6a"
+  accent-hover: "#0b5955"
+  accent-soft: "#dbeeeb"
+  ok: "#2b7a3e"
+  ok-soft: "#e3f3e6"
+  warn: "#8f5400"
+  warn-soft: "#fbeed6"
+  bad: "#b3261e"
+  bad-soft: "#fbe6e4"
+  add: "#e7f5ea"
+  add-ink: "#1f5f2e"
+  del: "#fdeceb"
+  del-ink: "#8f2119"
+  focus: "#5fb3ac"
+  night-bg: "#0f1413"
+  night-surface: "#151b1a"
+  night-surface-2: "#1a2321"
+  night-ink: "#e6ebe8"
+  night-ink-2: "#b3bfba"
+  night-ink-3: "#8c9893"
+  night-rule: "#26302d"
+  night-accent: "#4fc1b8"
+  night-accent-soft: "#143331"
+  night-ok: "#6cc98a"
+  night-warn: "#e3a94f"
+  night-bad: "#ff8078"
+  night-add: "#12281a"
+  night-del: "#351b18"
 typography:
-  display:
-    fontFamily: "Spline Sans, sans-serif"
-    fontSize: "30px"
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: "-0.025em"
-  headline:
-    fontFamily: "Spline Sans, sans-serif"
-    fontSize: "25px"
-    fontWeight: 700
-    lineHeight: 1.18
-    letterSpacing: "-0.02em"
   title:
-    fontFamily: "Spline Sans, sans-serif"
-    fontSize: "21px"
+    fontFamily: "Red Hat Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "22px"
     fontWeight: 700
     lineHeight: 1.2
-  body-large:
-    fontFamily: "Spline Sans, sans-serif"
-    fontSize: "15px"
-    fontWeight: 400
-    lineHeight: 1.6
-  body-default:
-    fontFamily: "Spline Sans, sans-serif"
-    fontSize: "14px"
-    fontWeight: 400
-    lineHeight: 1.5
+    letterSpacing: "-0.012em"
   body:
-    fontFamily: "Spline Sans, sans-serif"
+    fontFamily: "Red Hat Text, Segoe UI, system-ui, sans-serif"
     fontSize: "13px"
     fontWeight: 400
-    lineHeight: 1.55
-  label:
-    fontFamily: "Spline Sans, sans-serif"
-    fontSize: "12px"
+    lineHeight: 1.5
+  control:
+    fontFamily: "Red Hat Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "12.5px"
     fontWeight: 600
-    lineHeight: 1.35
+    lineHeight: 1
+  label:
+    fontFamily: "Red Hat Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 700
+    lineHeight: 1.4
+    letterSpacing: "0.06em"
   data:
-    fontFamily: "IBM Plex Mono, monospace"
-    fontSize: "11px"
+    fontFamily: "Red Hat Mono, Cascadia Mono, Consolas, monospace"
+    fontSize: "11.5px"
     fontWeight: 500
     lineHeight: 1.4
+  gutter:
+    fontFamily: "Red Hat Mono, Cascadia Mono, Consolas, monospace"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1.6
 rounded:
-  control: "4px"
-  container: "8px"
-  overlay: "12px"
+  marker: "2px"
+  focus: "3px"
+  mark: "5px"
+  control: "6px"
+  container: "10px"
+  pill: "999px"
 spacing:
-  compact: "8px"
+  tight: "6px"
   control: "12px"
-  section: "16px"
-  panel: "24px"
-  canvas: "28px"
-  document: "38px"
+  section: "18px"
+  page: "20px"
+  gutter: "88px"
 components:
   button-primary:
-    backgroundColor: "{colors.decision-cobalt}"
-    textColor: "{colors.paper}"
+    backgroundColor: "{colors.accent}"
+    textColor: "#ffffff"
     rounded: "{rounded.control}"
-    padding: "8px 13px"
-    height: "38px"
-  button-primary-hover:
-    backgroundColor: "{colors.decision-cobalt-hover}"
-    textColor: "{colors.paper}"
-    rounded: "{rounded.control}"
+    padding: "6px 12px"
+    height: "34px"
   button-secondary:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.dossier-ink}"
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
-    padding: "8px 13px"
-    height: "38px"
+    padding: "6px 12px"
+    height: "34px"
   input:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.dossier-ink}"
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
-    padding: "9px 10px"
+    padding: "8px 10px"
 ---
 
 # Design System: SignalRoom
 
 ## Overview
 
-**Creative North Star: "The Evidence Docket"**
+**Creative North Star: "The Review Request"**
 
-SignalRoom is a calm technical review surface, shaped by architecture decision records, incident handovers, and audit workpapers. Its structure is explicit and ruled: provenance, uncertainty, proposal, critique, and human decision occupy stable regions instead of floating cards. It should feel made for someone evaluating consequences, not admiring an AI demo.
+The brief is a pull request against the conversation. A solution engineer reviews it the way engineers already review code: a request header with checks, a list of changed claims, a document with a line-number gutter carrying transcript references, evidence as added lines, out-of-scope items as removed lines, findings as comment threads under the section they concern, and a submit-review group that approves, requests changes or answers open items. It refuses the AI-workbench arrangement of cards, KPI tiles and an assistant panel.
 
-The system is dense enough to keep the reasoning chain in view, but never compressed below comfortable reading. Brand expression comes from precise cobalt state, tabular evidence details, and the disciplined three-region workspace.
+Two renditions of one world: day paper (cool grey-green paper, carbon ink) and night bench (green-black ground, chalk ink). Structure, type and spacing are identical; only the token values swap on `data-theme="night"`.
 
-**Key Characteristics:**
+**Key characteristics**
 
-- Stable information columns with one-pixel rules.
-- Cobalt reserved for the current decision or selection.
-- Visible evidence provenance, confidence, and uncertainty.
-- Compact sans typography with mono only for identifiers and measurements.
-- Functional motion limited to state change and focused overlays.
+- One teal review accent for the current selection, primary action and links. Green verifies, amber cautions, red blocks, and nothing else is coloured.
+- An 88px monospaced gutter is the spine of the document: every quote, constraint, finding and answer hangs from a line reference.
+- Ruled containers, not cards. One soft offset shadow exists, on the room menu and the composer sheet, and nothing else floats.
+- Dense Operate typography on one family, with mono reserved for line numbers, ids and measurements.
+- Motion explains state: a selection marker that travels, threads that arrive, one authored moment when a decision resolves.
 
 ## Colors
 
-The palette combines cool document neutrals with a single decision cobalt; green verifies, amber cautions, and red blocks.
+**The Provenance Rule.** Colour states where a thing came from or what state it is in, never decorates. Added tint marks a verified quote and a follow-up line, removed tint marks scope the participants declined, accent marks the current claim and the primary action.
 
-### Primary
-
-- **Decision Cobalt:** Drives primary actions, current selections, and the active workflow state.
-- **Soft Decision Cobalt:** Holds selected rows and evidence regions without competing with text.
-
-### Secondary
-
-- **Verified Green:** Marks completed stages, grounded confidence, and trusted audit behavior.
-- **Caution Amber:** Marks medium uncertainty and correctable risk.
-- **Blocked Red:** Marks high severity and destructive or failed state.
-
-### Neutral
-
-- **Dossier Ink:** Primary copy and the dark application bar.
-- **Annotation:** Secondary copy, metadata, and descriptive labels.
-- **Canvas:** The cool page field outside the working dossier.
-- **Paper / Paper Subtle:** Main evidence surface and secondary work regions.
-- **Rule / Rule Strong:** Structural separation and interactive control boundaries.
-
-**The Evidence Color Rule.** Accent color always communicates state; it is never ambient decoration.
+- Day: page `#f6f7f4`, surface white, secondary surface `#eef1ec`, gutter `#f3f5f1`, ink `#172120` with two quieter steps, rules `#d9dfd9` and `#bcc6c0`.
+- Night: page `#0f1413`, surface `#151b1a`, gutter `#131a19`, ink `#e6ebe8`, rules `#26302d` and `#37443f`. Accent lightens to `#4fc1b8` and its text inverts to the page colour.
+- Semantic pairs (solid plus soft) for ok, warn and bad exist in both renditions; chips and notices mix the solid at 40 to 45 percent into their border.
 
 ## Typography
 
-**Display Font:** Spline Sans (with sans-serif fallback)  
-**Body Font:** Spline Sans (with sans-serif fallback)  
-**Label/Mono Font:** IBM Plex Mono (with monospace fallback)
+Red Hat Text carries every interface size; Red Hat Mono carries the gutter, ids, the eval line and measurements. Both are self-hosted (latin subset) under `apps/web/public/fonts`.
 
-**Character:** A practical, slightly technical sans carries all interface copy. The mono face is restricted to requirement IDs, timestamps, counts, and other evidence that benefits from stable character width.
+**The Measurement Rule.** Mono means a line number, an id, a count or a cost. It is never atmosphere.
 
-### Hierarchy
-
-- **Display** (700, 30px, 1.15): Page-level review task.
-- **Headline** (700, 25px, 1.18): Selected requirement or primary document title.
-- **Title** (700, 21px, 1.2): Decision and overlay headings.
-- **Body Large** (400, 15px, 1.6): Requirement summaries and evidence descriptions, capped near 70 characters.
-- **Body Default** (400, 14px, 1.5): Application chrome and default document text.
-- **Body** (400, 13px, 1.55): Operational prose and helper copy.
-- **Label** (600, 12px, 1.35): Section and control labels.
-- **Data** (500, 11px, 1.4): IDs, times, percentages, and ordered architecture steps.
-
-**The Measurement Rule.** Mono means evidence or measurement, never generic technical atmosphere.
+Scale: 22px title (700, -0.012em), 13px body, 12.5px controls (600), 12px uppercase labels (700, 0.06em), 11.5px mono data, 11px mono gutter. Tabular numerals everywhere.
 
 ## Layout
 
-The desktop workspace uses three stable regions: a 270px requirements index, a fluid evidence docket, and a 310px decision panel. A compact task header and six-stage workflow sit directly above it. Content is capped at 1600px with 28px outer breathing room.
+Desktop: a sticky 52px top bar, a request header with status pill, title, lede, eval line and a six-cell checks strip, then three columns of 272px (changed claims), fluid (the document) and 320px (review) inside a 1560px maximum with 20px gutters. The changed list and the review panel are sticky under the top bar.
 
-At 1180px, the decision panel moves beneath the evidence in a two-column summary. At 820px, the workspace becomes a single column and requirements become a horizontal selector. At 620px, analysis sections stack and outer gutters reduce to 18px. Typography stays fixed; the structure adapts.
+At 1100px the review panel moves first and spans the width so the decision stays reachable, with its panels in an auto-fit grid. At 820px the columns stack, the changed list becomes a horizontal strip, the checks strip scrolls and centres the active check, the gutter narrows to 64px, and the crumb label hides while the room switcher truncates.
 
-## Elevation & Depth
+## Elevation and depth
 
-The workspace is flat by default. One-pixel rules and subtle tonal layers establish hierarchy. The only raised surface is the new-discovery sheet, where a soft downward shadow communicates that it sits above the current task.
-
-**The Flat Dossier Rule.** Persistent work surfaces use either a boundary or a tonal change, never decorative shadow.
+Flat by default: containers are one-pixel rules on the surface colour. The only shadow is `0 14px 34px -14px rgba(23,33,32,.32)` (darker at night), on the room menu and the composer sheet, which carry no border. Elevation is declared once.
 
 ## Shapes
 
-Controls use gently squared 4px corners. Larger containers may use 8px or 12px only when the object is a true overlay or bounded region. Circles are reserved for workflow markers and status dots.
+Controls at 6px, containers at 10px, chips as pills, the selection marker at 2px, the brand mark at 5px. No nested containers.
 
 ## Components
 
-### Buttons
+- **Request header**: status pill (open, approved, failed, running), meta counts, title, lede, eval line, checks strip with complete, active, failed and pending states.
+- **Changed list**: claims grouped as requirements and use cases, each with a mono id, a confidence dot and its line reference; the selected claim carries a shared-layout accent marker.
+- **Document**: hunks with an `@@ id` header, rows on an 88px gutter, added and removed tints, chips for confidence, readiness, baseline and severity, tables that scroll inside their container.
+- **Threads**: comment-style findings with a source chip (code check or critic), a severity word, the location and the lines; struck and marked resolved once the brief is approved.
+- **Review panel**: submit group as a radio group with an inline note field, one primary submit, export, then checks, timeline and the graph trace.
+- **Composer sheet**: right-hand sheet with a mono transcript field, fixture loader, reference-file target and the synthetic-only notice.
 
-- **Shape:** Compact and squared (4px), at least 38px high.
-- **Primary:** Decision cobalt with white text; used once in a decision group.
-- **Hover / Focus:** A darker cobalt hover and a clearly offset focus ring.
-- **Secondary:** White or transparent with a strong neutral rule.
+## Motion
 
-### Inputs / Fields
+One grammar in `motion.ts`: ease `cubic-bezier(0.16, 1, 0.3, 1)`, durations 120ms feedback, 200ms state, 320ms layout, 600ms focal. Selection continuity uses a shared layout marker; threads and the sheet arrive in place; a changed brief revision flashes its hunk headers once. The focal moment is a submitted approval: the status pill resolves, the Gate check completes, a single green rule sweeps under the checks and threads are marked resolved. Under reduced motion spatial movement and the sweep are removed while colour and state changes remain.
 
-- **Style:** White field, strong one-pixel boundary, 4px corners, and 13px text.
-- **Focus:** Cobalt border plus a visible external focus ring.
-- **Disabled:** Reduced opacity and a non-interactive cursor.
+## Do and don't
 
-### Navigation
-
-Requirements are full-width rows, not cards. The selected row uses a soft cobalt field and a 3px inset state marker. On small screens the same rows form a horizontally scrollable selector.
-
-### Workflow
-
-Workflow stages remain fixed in sequence. Completed steps use verified green; only the active stage receives the cobalt field and bottom rule. Detail copy may collapse at narrower widths, but stage names remain visible.
-
-### Evidence Docket
-
-The selected requirement begins with ID, kind, and confidence, followed by its source quotation, recommendation, critic pass, unresolved questions, and retrieved passages. Every region uses shared rules and section spacing rather than nested cards.
-
-## Do's and Don'ts
-
-### Do:
-
-- **Do** make the current human decision visible without scrolling on desktop.
-- **Do** keep source, timestamp, confidence, and evaluation details close to the claim they qualify.
-- **Do** reserve cobalt for action and current state, green for verified state, and amber/red for risk.
-- **Do** keep interactive copy at 12px or larger and operational prose at 13px or larger.
-- **Do** preserve the same control vocabulary across intake, follow-up, approval, and export.
-
-### Don't:
-
-- **Don't** introduce marketing heroes, editorial kickers, glass effects, gradients, or decorative status chips into product surfaces.
-- **Don't** place cards inside cards; use rules, spacing, and stable regions to express hierarchy.
-- **Don't** hide unknowns or turn synthetic evaluation data into customer proof.
-- **Don't** use color without a state meaning or mono type without evidence meaning.
+- Do put a line reference on every claim, constraint and finding; the gutter is the design.
+- Do keep the decision above the fold at every width.
+- Do add rows and threads, never cards, when the brief grows a section.
+- Don't colour anything that is not a state or a provenance.
+- Don't introduce a second shadow, a hero metric, an assistant persona or a chat bubble.
+- Don't present synthetic evidence or evaluation numbers as customer proof.

@@ -23,6 +23,8 @@ transcript ─► discover ─► extract ─► retrieve ─► design ─► c
 - **Critique** has the model read the brief against the transcript, then merges code findings: dropped evidence, unverified numbers, invalid citations, unaddressed contradictions.
 - **Gate** is a LangGraph interrupt. The engineer approves, requests changes with a note (back to design), or answers open items (back to extract, with the answers as new attributed lines). A vague answer such as "we don't know yet" cannot close an item, whatever the model says.
 
+![The review workspace, day rendition](docs/screenshots/review-desktop-day.png)
+
 ## Demo path (three minutes)
 
 ```powershell
@@ -63,6 +65,10 @@ Ten synthetic discovery calls, each with gold requirements, gold open items and 
 What failed, honestly: the model rarely records a contradiction when one speaker corrects another (eight cameras, then five working), and it pads "TBC" durations with estimates, which the number check flags in every room. Both are prompt problems. A second run with revised prompts was started and stopped by a provider credit limit; the changes are queued, not claimed.
 
 The grounding gate fired zero times on real runs. It is kept anyway: a guarantee that costs nothing when the model behaves is still a guarantee, and the unit tests prove it fires when the model does not.
+
+## Design
+
+The workspace is "The Review Request": the brief as a pull request against the transcript, chosen in an Impeccable direction round over the roll's alternates, built code-led, reviewed by a fresh-context finish review (one fix round, one verdict pass), and recorded in [DESIGN.md](DESIGN.md) from the built code. Day and night renditions of one world; the night capture is in `docs/screenshots/`.
 
 ## Architecture and decisions
 
