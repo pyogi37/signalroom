@@ -22,3 +22,4 @@ apps/api/evals/results/history/
 
 # Local Claude Code launch config (developer ports)
 .claude/
+apps/web/.impeccable/

@@ -1,0 +1,126 @@
+{
+  "id": "project:signalroom",
+  "tier": "featured",
+  "name": "SignalRoom",
+  "status": "working-demo",
+  "statusLabel": "Working demo with a published evaluation, synthetic data only",
+  "tagline": "A discovery transcript becomes a solution brief where every claim is tied to a line the customer said, a critic lists what could not be supported, and a human approves.",
+  "idea": "SignalRoom does the part of solutioning an LLM can do, extracting requirements and drafting a first brief, and makes the part it cannot be trusted with visible: what was invented, what was disputed, and what is still unknown.",
+  "problem": "After a discovery call a solution engineer has to turn forty minutes of messy conversation into a brief a delivery team can act on. The dangerous failure is not a missing requirement but a confident sentence nobody said: an agreed duration that was never agreed, a number lifted from a vendor sheet, a requirement that was one person thinking aloud while another disagreed.",
+  "question": "How do you let a model draft the brief while making it structurally unable to claim more than the conversation supports?",
+  "corePromise": [
+    "Every requirement carries a quote that code verified is a verbatim substring of a numbered transcript line.",
+    "Numbers the customer never said are flagged by provenance, not silently accepted.",
+    "A vague follow-up answer cannot close an open item, whatever the model concludes.",
+    "Approval is a real interrupt in the workflow, recorded with a reviewer decision."
+  ],
+  "principles": [
+    {"title": "Evidence before recommendation", "text": "A claim without a quoted line is a question, not a requirement."},
+    {"title": "Show what the model was not allowed to say", "text": "Dropped quotes, stripped citations and flagged numbers stay visible in the room and in the eval."},
+    {"title": "Workflow activity is inspectable, not theatrical", "text": "Every stage does real work or does not exist; the trace shows real checkpoints."},
+    {"title": "Works without secrets", "text": "Recorded model runs replay the demo and the evaluation in CI with no key."},
+    {"title": "Synthetic by rule", "text": "Every organization, transcript and number is invented and labelled; nothing derives from a real engagement."}
+  ],
+  "notList": [
+    "A chat assistant with a persona",
+    "A dashboard of KPIs about the sales pipeline",
+    "A voice product",
+    "A source of pricing or ROI claims",
+    "A production system or a claim of customer use"
+  ],
+  "coreFlow": [
+    {"step": "Discover", "text": "Deterministic segmentation of the transcript into numbered, speaker-attributed lines."},
+    {"step": "Extract", "text": "Structured model output; code verifies each quote against its cited line, repairs quotes found on another line, drops the rest, and records both."},
+    {"step": "Retrieve", "text": "SQLite full-text search over a synthetic pattern library; passages carry stable ids the brief can cite."},
+    {"step": "Design", "text": "A brief in the working shape of a solution architecture spec; code strips citations that were not retrieved and classifies every number as customer-stated, reference-derived or invented."},
+    {"step": "Critique", "text": "Model findings merged with code findings: dropped evidence, unverified numbers, invalid citations, unaddressed contradictions."},
+    {"step": "Gate", "text": "A LangGraph interrupt. Approve ends the graph; request changes returns to design with the note; follow-up answers become new attributed lines and return to extract."}
+  ],
+  "states": [
+    {"name": "Awaiting review", "text": "The graph is paused at the gate with a brief, a verdict and open items."},
+    {"name": "Needs changes", "text": "The critic found a high-severity issue; the primary action becomes a change request with a note."},
+    {"name": "Approved", "text": "The graph reached its end; reviewer, timestamp and brief revision are in the audit trail."},
+    {"name": "No model", "text": "Without a key, recorded rooms open and the composer says plainly that new transcripts need one."}
+  ],
+  "decisions": [
+    {"decision": "Code gates over prompt instructions", "tradeoff": "Prompts are requests. Every claim, citation and number is checked in code, and the first live run showed the checks needed tuning (number words, Unicode hyphens) before they were fair. The gate fired zero times on real runs and is kept anyway."},
+    {"decision": "A real LangGraph with the gate as an interrupt", "tradeoff": "A plain pipeline would be shorter and equally honest, but the workflow genuinely pauses with three exits and resumes after a restart. The original build had pass-through nodes; those were removed rather than kept as decoration."},
+    {"decision": "SQLite FTS5 instead of a vector database", "tradeoff": "A few dozen passages do not justify Qdrant. The previous hash embeddings scored 'alert' and 'alerts' at zero similarity. BM25 with stemming and a two-shared-terms floor is honest at this scale, behind an interface embeddings can replace."},
+    {"decision": "Record and replay model calls by content hash", "tradeoff": "Recordings are committed, so CI and the demo need no key and anyone can read which prompt produced which output. A prompt change moves the hash, so only changed stages re-record."},
+    {"decision": "Publish the failures with the scores", "tradeoff": "Contradictions were caught 3 of 8 times and every room came back needing changes. Both are in the README. Unmatched extractions count against precision rather than being relabelled."}
+  ],
+  "architecture": {
+    "stack": [
+      "FastAPI",
+      "LangGraph with a SQLite checkpointer",
+      "Pydantic strict-schema structured output over an OpenAI-compatible client (Groq default, OpenRouter tested)",
+      "SQLite FTS5",
+      "React 19 and Vite",
+      "pytest (52 tests) and an evaluation runner replayed in CI"
+    ],
+    "modules": [
+      {"name": "workflow.py", "role": "The graph: discover, extract, retrieve, design, critique, gate; state as plain dicts; projection to a Room."},
+      {"name": "grounding.py", "role": "The code gates: quote verification and repair, number provenance, citation stripping, the non-answer rule, question similarity."},
+      {"name": "model_client.py", "role": "structured_call: strict JSON schema output, recording and replay by content hash, latency, tokens and cost per call."},
+      {"name": "retrieval.py", "role": "FTS5 pattern library with stable passage ids."},
+      {"name": "evals/", "role": "Ten synthetic fixtures with gold rubrics and planted traps, the scoring module, the runner that writes results and the docs block."}
+    ],
+    "dataModel": "Room = utterances[line, speaker, text] + requirements[id, evidence{line, speaker, quote}] + open_items[status, answered_line, rejected_answers] + brief{snapshot, readiness, constraints, phases, success_measures, risks} + critique{findings[kind, severity, source]} + grounding{proposed, passed, repaired, dropped} + metrics",
+    "keyIdeas": [
+      "The speaker on every quote comes from the transcript, never from the model.",
+      "Numbers are classified by provenance: said by the customer (number words folded to digits), present only in reference material, or nowhere.",
+      "A follow-up answer becomes a new attributed line, so re-extraction sees it as evidence; the code refuses to let a non-answer resolve anything.",
+      "The evaluation plants traps: injection lines, numbers seeded in the reference library, speaker contradictions, deliberate gaps."
+    ]
+  },
+  "whereAIFits": "Three model calls per room: extract, design, critique, each with strict structured output. The model proposes; code decides what survives. The interesting part is not the prompts but the gates around them and the evaluation that shows where the model still fails: it treats a correction between speakers as resolved rather than disputed, and it pads unknown durations with estimates.",
+  "process": "Started from a Codex scaffold that was audited first (AUDIT.md): keyword extraction dressed as an agent, pass-through graph nodes, evals that could not fail. Rebuilt in ordered commits with Claude: retrieval, model client, the real graph, fixtures, the evaluation harness, a first live run, and check tuning from what that run exposed. Design followed the Impeccable process: product record, a direction round with alternates, a written direction contract, a fresh-context finish review, and DESIGN.md recorded from the built code.",
+  "shipped": [
+    "Six-stage workflow with a human gate as a LangGraph interrupt",
+    "Code-enforced quote verification with repairs and drops recorded",
+    "Number provenance check across the whole brief",
+    "Follow-up loop where non-answers cannot close items",
+    "Ten synthetic fixtures, scoring harness, CI replay from committed recordings",
+    "Recorded rooms that open with no key",
+    "DOCX export of the brief",
+    "Read-only MCP tools over search, rooms and evaluation results"
+  ],
+  "roadmap": [
+    "Run 2 of the evaluation with the revised contradiction and duration prompts (blocked on provider credits at time of writing)",
+    "Streaming stage updates in the UI instead of a synchronous run",
+    "A code-side contradiction detector for numeric disagreements between speakers",
+    "More fixtures before quoting rates with confidence"
+  ],
+  "openQuestions": [
+    "Should a correction between speakers be surfaced as a contradiction or as a resolved value with a note?",
+    "How much of the brief should the model be allowed to write before the reviewer has confirmed the open items?",
+    "Is a single accountable reviewer the right gate, or does a delivery lead need a second one?"
+  ],
+  "whatItShows": [
+    "AI engineering: structured output, grounding enforced in code, prompt-injection surface treated as data, recorded and replayable model calls",
+    "Evaluation discipline: labelled synthetic fixtures with traps, scores published with their failures, regression floors in CI",
+    "Solutioning judgment: the brief has the shape a delivery team actually needs, with open items owned and unknowns kept visible",
+    "Proportionate architecture: FTS5 over a vector database, one graph library where it earns its keep, decisions written down with their alternatives",
+    "Honesty as a product rule: synthetic data only, no production claims, the audit of the original build committed alongside the rebuild"
+  ],
+  "screenshots": [],
+  "links": {
+    "github": "TODO: repository URL once pushed"
+  },
+  "technologies": [
+    "Python",
+    "FastAPI",
+    "LangGraph",
+    "Pydantic",
+    "SQLite FTS5",
+    "TypeScript",
+    "React",
+    "Vite",
+    "OpenAI-compatible APIs"
+  ],
+  "dimensions": [
+    "agents",
+    "customer",
+    "builder"
+  ]
+}
