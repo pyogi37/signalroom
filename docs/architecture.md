@@ -1,56 +1,77 @@
 # Architecture
 
-## Product boundary
+## Boundary
 
-SignalRoom begins after a customer has agreed to a discovery session and ends at an approved
-solution brief. It does not send messages, commit commercial terms, or deploy systems.
+SignalRoom starts when a discovery transcript exists and ends when a solution engineer approves a brief. It does not join calls, send messages, price anything, or deploy anything. Every organization, person, document and number in it is invented.
+
+## Shape
+
+```text
+apps/web (React, Vite)                      apps/api (FastAPI)
+┌──────────────────────────┐   HTTP/JSON    ┌──────────────────────────────────────────────┐
+│ rooms · composer · docket│ ─────────────► │ main.py        routes, error mapping, seeding │
+│ decision panel · trace   │ ◄───────────── │ workflow.py    LangGraph graph + interrupt    │
+└──────────────────────────┘                │ grounding.py   code gates on model output     │
+                                            │ model_client.py OpenAI-compatible, record/replay│
+                                            │ retrieval.py   SQLite FTS5 pattern library    │
+                                            │ persistence.py rooms + audit log (SQLite)     │
+                                            │ exports.py     DOCX brief                     │
+                                            │ mcp_server.py  read-only MCP tools            │
+                                            └──────────────────────────────────────────────┘
+                                                     │                    │
+                                              recordings/*.json    evals/ fixtures, run.py, results
+```
 
 ## Workflow
 
 ```text
-discovery input
-      |
-      v
-  discover -----> missing context? -----> open questions
-      |
-      v
-  structure ----> requirements + constraints + success metrics
-      |
-      v
-  retrieve -----> cited capability and pattern evidence
-      |
-      v
-  design --------> architecture + phased PoC plan
-      |
-      v
-  critique ------> contradictions + risks + unsupported claims
-      |
-      v
-  approval ------> human accepts/rejects proposed brief
+transcript
+   │
+   ▼
+discover   deterministic: numbered, speaker-attributed utterances (no model)
+   │
+   ▼
+extract    model → requirements, use cases, open items, contradictions
+   │        code → quote must be a verbatim substring of the cited line;
+   │               repaired if found elsewhere, dropped otherwise; speaker from transcript
+   ▼
+retrieve   FTS5 per requirement and use case → passages with stable ids
+   │
+   ▼
+design     model → SAS-style brief (snapshot, readiness, constraints, phases,
+   │               success measures, risks, more open items)
+   │        code → strip citations to passages not retrieved; classify every
+   │               number: customer said it / reference material / nowhere
+   ▼
+critique   model → findings and verdict
+   │        code → merge: dropped evidence, unverified numbers, invalid citations,
+   │               unaddressed contradictions, missing owners
+   ▼
+gate       LangGraph interrupt. Human decision resumes the thread:
+             approve          → END
+             request changes  → design (with the note)
+             follow-up answers→ extract (answers become new attributed lines;
+                                a non-answer cannot close an item)
 ```
 
-The API uses LangGraph because the workflow has durable state, conditional review boundaries, and
-nodes that can be evaluated independently. V1 retrieval uses Qdrant embedded mode and deterministic
-hashing embeddings, so the vector-search path is real while remaining reproducible without credentials.
-Provider-quality embeddings and an LLM structured-output adapter are the next replaceable components.
+State is checkpointed in SQLite after every node, so a room survives a restart and the trace endpoint shows real steps. The API projects graph state into a `Room` and stores that alongside an audit log of decisions.
 
 ## Trust model
 
-- Every requirement retains its supporting evidence.
-- Missing facts remain open questions; the system does not silently fill them.
-- Retrieved material is distinguished from customer statements.
-- A critique stage runs before approval.
-- Finalization is a human decision.
-- All included data is synthetic.
+- The model proposes. Code decides what survives. Every gate records what it changed.
+- Transcript and reference text reach the model inside delimiters described as data. The real defence is that outputs are schema-constrained and checked, not the instruction.
+- Numbers the customer did not say are flagged by provenance, not silently accepted.
+- Approval is an interrupt in the workflow, not a status flag. It is not exposed through MCP.
+- Without a key the app opens recorded rooms and says plainly that new transcripts need a key.
 
-## Production path
+## Model calls
 
-Completed locally: persistent solution rooms and audit events, embedded Qdrant retrieval, PDF/DOCX/
-Markdown/text ingestion, visible citations, follow-up re-analysis, DOCX export, an optional structured-
-output model adapter, and a read-only MCP tool surface.
+One function, `structured_call`, sends a system and user message to an OpenAI-compatible endpoint with strict JSON schema output and returns a validated Pydantic object plus latency, tokens and an estimated cost. Calls are keyed by a content hash and can be recorded and replayed; see `docs/DECISIONS.md`.
 
-Remaining production path:
+## Evaluation
 
-1. Postgres/pgvector deployment plus hybrid retrieval and reranking.
-2. Persistent LangGraph checkpointers and native resumable interrupts.
-3. Trace storage, batch evaluation runs, cost/latency metrics, authentication, and access control.
+`apps/api/evals/run.py` runs the ten fixtures through the real graph, scores them against gold labels and planted traps, exercises the follow-up gate, and writes results to `evals/results/latest.json` and `docs/evaluation.md`. CI replays committed recordings so the numbers are reproducible without a key.
+
+## Not built, on purpose
+
+Streaming stage updates in the UI, Postgres, authentication, multi-tenant rooms, hosted deployment. Each is a known next step, none is needed to prove the claim.
