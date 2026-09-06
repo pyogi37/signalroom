@@ -78,13 +78,18 @@ export function RequestHeader({ room, running, loading, evalLine }: RequestHeade
     <h1>{running ? 'Running the workflow against the transcript.' : room ? (room.status === 'approved' ? `Approved: the brief for ${room.organization}.` : `Review the brief for ${room.organization}.`) : loading ? 'Connecting to the API.' : 'Open a recorded room or start one from a synthetic transcript.'}</h1>
     <p className="request-lede">{room ? 'Every claim carries a quote that code verified against a numbered transcript line. Threads under each section are what the critic and the code checks could not accept. You decide.' : 'Everything here is invented and labelled synthetic.'}</p>
     {evalLine && <p className="eval-line mono" title="Latest evaluation run over the synthetic fixtures">{evalLine}</p>}
-    <Checks stages={room?.stages ?? []} running={running}/>
+    <Checks stages={room?.stages ?? []} running={running} resolved={room?.status === 'approved'}/>
   </section>
 }
 
-function Checks({ stages, running }: { stages: StageRecord[]; running: boolean }) {
+function Checks({ stages, running, resolved }: { stages: StageRecord[]; running: boolean; resolved: boolean }) {
   const byName = new Map(stages.map(stage => [stage.name, stage]))
-  return <ol className="checks" aria-label="Workflow checks">
+  const strip = useRef<HTMLOListElement>(null)
+  useEffect(() => {
+    const active = strip.current?.querySelector<HTMLElement>('.check.active, .check.failed')
+    if (strip.current && active) strip.current.scrollLeft = Math.max(0, active.offsetLeft - strip.current.clientWidth / 2 + active.clientWidth / 2)
+  }, [stages, running])
+  return <ol className={`checks ${resolved ? 'resolved' : ''}`} ref={strip} aria-label="Workflow checks">
     {ORDER.map((name, index) => {
       const stage = byName.get(name)
       const status = running ? (index === 0 ? 'active' : 'pending') : stage?.status ?? 'pending'

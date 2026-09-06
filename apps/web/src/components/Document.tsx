@@ -30,15 +30,17 @@ function Row({ g, children, kind = '', head = false }: { g?: ReactNode; children
 }
 
 function Threads({ findings, room }: { findings: Finding[]; room: Room }) {
+  const resolved = room.status === 'approved'
   const grammar = useGrammar()
   if (!findings.length) return null
   return <div className="threads">
     <AnimatePresence initial={false}>
-      {findings.map((finding, index) => <motion.article className={`thread ${finding.severity}`} key={`${finding.kind}-${finding.location}-${index}`} {...grammar.arrive} aria-label={`${sentence(finding.kind)} finding`}>
+      {findings.map((finding, index) => <motion.article className={`thread ${finding.severity} ${resolved ? 'resolved' : ''}`} key={`${finding.kind}-${finding.location}-${index}`} {...grammar.arrive} aria-label={`${sentence(finding.kind)} finding`}>
         <div className="thread-head">
           <span className={`chip ${finding.source === 'code' ? 'code' : 'critic'}`}>{finding.source === 'code' ? 'code check' : 'critic'}</span>
           <strong>{sentence(finding.kind)}</strong>
           <span className={`sev ${finding.severity}`}>{finding.severity}</span>
+          {resolved && <span className="chip ok">resolved by approval</span>}
         </div>
         <div className="thread-body">
           {finding.text}
@@ -86,6 +88,11 @@ export function Document({ room, selected, answers, onAnswer, onSendAnswers, bus
   return <article className="doc" aria-label="Brief under review">
     <div className="doc-title"><span><span className="mono">brief.md</span> · {room.organization}</span><span>{room.critique ? `${room.critique.findings.length} threads · ${sentence(room.critique.verdict)}` : 'no critique yet'}</span></div>
 
+    {(bySection.general?.length || room.critique) ? <Hunk id="review" title="Review summary" count={room.critique ? `${room.critique.findings.length} threads` : undefined} flash={flash}>
+      <div className="rows"><Row kind="dim">{room.critique ? room.critique.summary : 'No critique yet.'}</Row></div>
+      <Threads findings={bySection.general ?? []} room={room}/>
+    </Hunk> : null}
+
     <Hunk id="evidence" title="Selected change" flash={false}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={claim?.id ?? 'none'} className="rows" {...grammar.arrive}>
@@ -97,7 +104,7 @@ export function Document({ room, selected, answers, onAnswer, onSendAnswers, bus
           </> : <Row kind="dim">Select a claim on the left to see its verified line.</Row>}
         </motion.div>
       </AnimatePresence>
-      <Threads findings={[...(bySection.evidence ?? []), ...(bySection.general ?? [])]} room={room}/>
+      <Threads findings={bySection.evidence ?? []} room={room}/>
     </Hunk>
 
     {brief && <>
