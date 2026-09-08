@@ -103,9 +103,15 @@
     "Proportionate architecture: FTS5 over a vector database, one graph library where it earns its keep, decisions written down with their alternatives",
     "Honesty as a product rule: synthetic data only, no production claims, the audit of the original build committed alongside the rebuild"
   ],
-  "screenshots": [],
+  "screenshots": [
+    {"src": "https://raw.githubusercontent.com/pyogi37/signalroom/main/docs/screenshots/review-desktop-day.png", "alt": "The review workspace on a laptop, day rendition: changed claims, the brief on a line-number gutter, and the review panel."},
+    {"src": "https://raw.githubusercontent.com/pyogi37/signalroom/main/docs/screenshots/review-desktop-night.png", "alt": "The same workspace in the night rendition."},
+    {"src": "https://raw.githubusercontent.com/pyogi37/signalroom/main/docs/screenshots/review-mobile-day.png", "alt": "The workspace on a phone, with the decision above the fold."}
+  ],
   "links": {
-    "github": "TODO: repository URL once pushed"
+    "github": "https://github.com/pyogi37/signalroom",
+    "demo": "https://signalroom-web.onrender.com",
+    "demoNote": "Recorded synthetic rooms, replayed with no model key. The free host sleeps, so the first load can take about a minute."
   },
   "technologies": [
     "Python",

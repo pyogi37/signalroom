@@ -4,6 +4,8 @@ A discovery transcript goes in. A solution brief comes out, with every claim tie
 
 Everything in this repository is synthetic. The organizations, people, transcripts and reference documents are invented for the demo and labelled as such.
 
+**[Live demo](https://signalroom-web.onrender.com)** with recorded rooms and no model key. It runs on a free host that sleeps, so the first load can take about a minute.
+
 ## The problem
 
 After a customer discovery call, a solution engineer has to turn forty minutes of messy conversation into a first-cut brief that a delivery team can act on. The dangerous failure is not a missing requirement. It is a confident sentence nobody said: a duration that was never agreed, a number lifted from a vendor sheet, a "requirement" that was one person thinking aloud while another disagreed. SignalRoom is built around making that failure visible and hard.
@@ -74,7 +76,8 @@ The workspace is "The Review Request": the brief as a pull request against the t
 
 - [docs/architecture.md](docs/architecture.md): the shape, the trust model, what was left out on purpose.
 - [docs/DECISIONS.md](docs/DECISIONS.md): each non-obvious choice with its alternative and cost, including why FTS5 beat a vector database here, why the graph kept LangGraph, and what run 1 changed.
-- [AUDIT.md](AUDIT.md): the audit of the original build that this work started from.
+- [AUDIT.md](AUDIT.md): the audit of the original build that this work started from. That build is preserved on the `codex-initial-build` branch.
+- [docs/deployment.md](docs/deployment.md): how the public demo is hosted, and what it deliberately does not have.
 
 Stack: FastAPI, LangGraph with a SQLite checkpointer, Pydantic strict-schema structured output over an OpenAI-compatible client, SQLite FTS5, React and Vite. Model calls are recorded by content hash and replayed in CI (`apps/api/recordings/`).
 
