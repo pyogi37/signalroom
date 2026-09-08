@@ -21,7 +21,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 API_DIR = HERE.parent
-REPO = API_DIR.parent
+REPO = API_DIR.parent.parent
 sys.path.insert(0, str(API_DIR / "src"))
 
 # Evaluation runs get their own scratch checkpoint database so they never touch the app's rooms.

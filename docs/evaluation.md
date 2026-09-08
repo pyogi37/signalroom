@@ -54,5 +54,72 @@ cd apps/api
 The block below is rewritten by `evals/run.py` on every run.
 
 <!-- results:start -->
-No run recorded yet.
+Run 20260908T171415Z, mode `replay`, model `openai/gpt-oss-120b` via `openrouter.ai`, 10 fixtures, 10 completed
+
+| Measure | Value |
+|---|---|
+| Requirement recall (mean) | 0.948 |
+| Requirement precision (mean) | 0.865 |
+| Open item recall (mean) | 0.75 |
+| Traps passed | 24 of 31 |
+| &nbsp;&nbsp;contradiction | 3 of 8 |
+| &nbsp;&nbsp;planted number | 2 of 2 |
+| &nbsp;&nbsp;gap | 15 of 17 |
+| &nbsp;&nbsp;injection | 4 of 4 |
+| Grounding: model claims that passed the quote check | 119 of 119 (1.0) |
+| &nbsp;&nbsp;repaired to the correct line | 0 |
+| &nbsp;&nbsp;dropped as unverifiable | 0 |
+| Critic verdict needs changes | 10 of 10 rooms (31 high findings) |
+| Latency per room, 3 model calls (mean / max) | 30813.59 ms / 107804.2 ms |
+| Tokens (input / output, all rooms) | 80382 / 84947 |
+| Estimated cost, all rooms | $0.0174 |
+
+Per fixture:
+
+| Fixture | Req recall | Req precision | Open item recall | Traps | Grounding | Verdict | Latency ms |
+|---|---|---|---|---|---|---|---|
+| northstar-cold-chain | 0.875 | 0.643 | 0.75 | 3/4 | 14/14 | needs_changes | 107804.2 |
+| kestrel-yard-logistics | 1.0 | 0.933 | 1.0 | 4/5 | 15/15 | needs_changes | 33431.7 |
+| meridian-regional-hospital | 0.857 | 0.818 | 1.0 | 3/3 | 11/11 | needs_changes | 21392.6 |
+| brightwater-utilities | 1.0 | 0.923 | 1.0 | 3/3 | 13/13 | needs_changes | 17348.5 |
+| halvorsen-foods | 1.0 | 1.0 | 0.667 | 2/3 | 9/9 | needs_changes | 19028.2 |
+| lattice-rail-maintenance | 0.889 | 0.75 | 0.75 | 2/2 | 12/12 | needs_changes | 23533.3 |
+| orion-ground-services | 1.0 | 0.923 | 1.0 | 3/4 | 13/13 | needs_changes | 23068.3 |
+| verdant-grid-solar | 1.0 | 1.0 | 0.333 | 1/2 | 10/10 | needs_changes | 21316.9 |
+| pinecrest-schools | 0.857 | 0.875 | 0.5 | 2/3 | 8/8 | needs_changes | 18153.9 |
+| tallow-retail | 1.0 | 0.786 | 0.5 | 1/2 | 14/14 | needs_changes | 23058.3 |
+
+Follow-up gate behaviour:
+
+| Fixture | Open item | Non-answer kept it open | Real answer closed it |
+|---|---|---|---|
+| northstar-cold-chain | OI-04 | True | True |
+| kestrel-yard-logistics | OI-02 | True | True |
+| meridian-regional-hospital | OI-04 | True | False |
+| brightwater-utilities | OI-03 | True | True |
+| halvorsen-foods | OI-01 | True | True |
+| orion-ground-services | OI-02 | True | True |
+| pinecrest-schools | OI-01 | True | True |
+
+What failed:
+
+- northstar-cold-chain: contradiction trap failed. The gateway is staying (L7) versus a proposal to replace it next year (L26). (not detected)
+- northstar-cold-chain: gold requirement `investigation-time` not found
+- northstar-cold-chain: gold open item `rate-limits` not found
+- kestrel-yard-logistics: contradiction trap failed. Eight cameras cover the dock (L8) versus five working (L9). (not detected)
+- meridian-regional-hospital: gold requirement `sterilisation-exclusion` not found
+- meridian-regional-hospital: a real answer did not close OI-04
+- halvorsen-foods: contradiction trap failed. Four packing lines (L2) versus three, line four is down (L3). (not detected)
+- halvorsen-foods: gold open item `line-count` not found
+- lattice-rail-maintenance: gold requirement `inspector-vocabulary` not found
+- lattice-rail-maintenance: gold open item `label-coverage` not found
+- orion-ground-services: contradiction trap failed. Fifteen inside the stand area (L3) versus signs say twenty-five (L4). (not detected)
+- verdant-grid-solar: gap trap failed. Image to string mapping has never been done for these layouts. (no open item covers this gap)
+- verdant-grid-solar: gold open item `image-to-string-mapping` not found
+- verdant-grid-solar: gold open item `pdf-layouts` not found
+- pinecrest-schools: contradiction trap failed. Twelve hundred tickets a month (L2) versus four hundred reaching the queue (L3). (not detected)
+- pinecrest-schools: gold requirement `editable-answers` not found
+- pinecrest-schools: gold open item `ticket-volume` not found
+- tallow-retail: gap trap failed. The real-time versus end-of-day decision was explicitly deferred to the customer. (no open item covers this gap)
+- tallow-retail: gold open item `real-time-or-end-of-day` not found
 <!-- results:end -->
