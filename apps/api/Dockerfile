@@ -10,6 +10,7 @@ COPY evals ./evals
 COPY recordings ./recordings
 ENV SIGNALROOM_FIXTURES_DIR=/app/evals/fixtures \
     SIGNALROOM_RECORDINGS_DIR=/app/recordings \
+    SIGNALROOM_EVAL_RESULTS=/app/evals/results/latest.json \
     SIGNALROOM_MODEL_MODE=replay \
     SIGNALROOM_DATA_DIR=/app/data
 

@@ -20,7 +20,9 @@ from .seeding import seed_rooms
 from .workflow import resume_room, room_is_waiting, start_room, to_room, trace
 
 log = logging.getLogger("signalroom")
-RESULTS_PATH = Path(__file__).resolve().parents[2] / "evals" / "results" / "latest.json"
+# Same reason as the fixtures and recordings directories: this relative path stops
+# resolving once the package is installed into a container, so the image overrides it.
+RESULTS_PATH = Path(env("SIGNALROOM_EVAL_RESULTS") or Path(__file__).resolve().parents[2] / "evals" / "results" / "latest.json")
 
 
 

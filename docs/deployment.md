@@ -36,10 +36,14 @@ Environment:
   network call to a provider. Adding a key and setting the mode to `auto` would enable live
   analysis of a pasted transcript, at which point everything pasted is public.
 
-The image copies `evals/fixtures` and `recordings` and points `SIGNALROOM_FIXTURES_DIR` and
-`SIGNALROOM_RECORDINGS_DIR` at them. Both paths otherwise resolve relative to the source
-tree, which does not survive `pip install` into a container. The start command honours an
-injected `PORT`.
+The image copies `evals` and `recordings` and points `SIGNALROOM_FIXTURES_DIR`,
+`SIGNALROOM_RECORDINGS_DIR` and `SIGNALROOM_EVAL_RESULTS` at them. All three otherwise
+resolve relative to the source tree, which does not survive `pip install` into a container.
+The start command honours an injected `PORT`.
+
+Optionally set `SIGNALROOM_MODEL_BASE_URL` to the endpoint the recordings came from. It
+changes nothing while the mode is replay, but `/api/capabilities` reports the default host
+rather than the real one without it.
 
 ## Client static site
 
