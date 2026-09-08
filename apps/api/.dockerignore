@@ -1,0 +1,9 @@
+# Keep the build context small and keep secrets out of it.
+# evals/fixtures and recordings are deliberately NOT ignored: the seed replays them.
+.venv/
+data/
+.env
+**/__pycache__/
+*.pyc
+.pytest_cache/
+evals/results/history/

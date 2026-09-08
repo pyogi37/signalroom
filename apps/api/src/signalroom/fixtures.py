@@ -12,7 +12,16 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from .config import env
+
+# On a developer machine the fixtures sit next to the source tree. In a
+# container the package is installed into site-packages and that relative path
+# no longer resolves, so the image sets SIGNALROOM_FIXTURES_DIR instead.
 FIXTURES_DIR = Path(__file__).resolve().parents[2] / "evals" / "fixtures"
+
+
+def fixtures_dir() -> Path:
+    return Path(env("SIGNALROOM_FIXTURES_DIR") or FIXTURES_DIR)
 
 
 class GoldItem(BaseModel):
@@ -61,7 +70,7 @@ class Fixture(BaseModel):
 
 
 def load_fixtures(directory: Path | None = None) -> list[Fixture]:
-    folder = directory or FIXTURES_DIR
+    folder = directory or fixtures_dir()
     fixtures = []
     for path in sorted(folder.glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
