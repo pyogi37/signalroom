@@ -2,7 +2,7 @@
   "id": "project:signalroom",
   "tier": "featured",
   "name": "SignalRoom",
-  "status": "working-demo",
+  "status": "working-mvp",
   "statusLabel": "Working demo with a published evaluation, synthetic data only",
   "tagline": "A discovery transcript becomes a solution brief where every claim is tied to a line the customer said, a critic lists what could not be supported, and a human approves.",
   "idea": "SignalRoom does the part of solutioning an LLM can do, extracting requirements and drafting a first brief, and makes the part it cannot be trusted with visible: what was invented, what was disputed, and what is still unknown.",
@@ -81,6 +81,7 @@
     "Number provenance check across the whole brief",
     "Follow-up loop where non-answers cannot close items",
     "Ten synthetic fixtures, scoring harness, CI replay from committed recordings",
+    "A published evaluation run: 0.95 requirement recall, 0.87 precision, 119 of 119 model quotes passing the verbatim check, 4 of 4 injection lines ignored, 2 of 2 planted numbers kept out, and 3 of 8 contradictions caught, which is the failure the write-up leads with",
     "Recorded rooms that open with no key",
     "DOCX export of the brief",
     "Read-only MCP tools over search, rooms and evaluation results"
