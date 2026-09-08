@@ -1,6 +1,8 @@
 import type { AuditEvent, Capabilities, DecisionBody, EvaluationSummary, FixtureSummary, Room, RoomSummary, TraceStep } from './types'
 
-export const API = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+// VITE_SIGNALROOM_API_URL is the name the first deployment used. It is still
+// read so an existing host configuration keeps working without an edit.
+export const API = import.meta.env.VITE_API_URL ?? import.meta.env.VITE_SIGNALROOM_API_URL ?? 'http://127.0.0.1:8000'
 
 export class ApiError extends Error {
   status: number
