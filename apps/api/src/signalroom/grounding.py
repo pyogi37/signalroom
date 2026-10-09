@@ -16,6 +16,7 @@ The model proposes; this module decides what survives. Three families:
 
 import re
 from collections import defaultdict
+from collections.abc import Iterable
 
 from .models import (
     Brief,
@@ -245,12 +246,22 @@ def _answer_text(text: str) -> str:
 # ----------------------------------------------------------------------------
 
 _ID_TOKENS = re.compile(r"\b(?:REQ|UC|OI|L)-?\d+\b", re.IGNORECASE)
+# Passages are cited as "<slug>#<n>" (see retrieval.py); the n is an index into the library, not a claim.
+_PASSAGE_CITATION = re.compile(r"\b[a-z0-9][a-z0-9-]*#\d+", re.IGNORECASE)
 _NUMBER = re.compile(r"(?<![\w.])(\d+(?:[.,]\d+)?\s?%?)(?![\w.])")
 _ORDINAL_CONTEXT = re.compile(r"\b(?:phase|step|option|stage|tier|priority|q)\s*$", re.IGNORECASE)
 
 
-def numbers_in(text: str) -> list[str]:
-    cleaned = _ID_TOKENS.sub(" ", ascii_punctuation(text))
+def numbers_in(text: str, passage_ids: Iterable[str] = ()) -> list[str]:
+    """Numbers stated in the text, ignoring requirement/line ids, phase ordinals and passage citations.
+
+    `passage_ids` are removed verbatim first, so a retrieved id that does not fit the slug shape is still not read as a number.
+    """
+    cleaned = ascii_punctuation(text)
+    exact = sorted({ascii_punctuation(pid) for pid in passage_ids if pid}, key=len, reverse=True)
+    if exact:
+        cleaned = re.sub("(?:" + "|".join(map(re.escape, exact)) + r")(?!\d)", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = _ID_TOKENS.sub(" ", _PASSAGE_CITATION.sub(" ", cleaned))
     found: list[str] = []
     for match in _NUMBER.finditer(cleaned):
         token = match.group(1).replace(" ", "")
@@ -262,25 +273,26 @@ def numbers_in(text: str) -> list[str]:
 
 
 def _brief_text_fields(brief: BriefDraft | Brief) -> list[tuple[str, str]]:
+    """Locations are paths into the brief JSON, so list indexes count from zero."""
     fields: list[tuple[str, str]] = [
         ("snapshot.one_line_goal", brief.snapshot.one_line_goal),
         ("snapshot.scope_summary", brief.snapshot.scope_summary),
         ("snapshot.deployment_shape", brief.snapshot.deployment_shape),
         ("recommendation.approach", brief.recommendation.approach),
     ]
-    for index, phase in enumerate(brief.recommendation.phases, start=1):
+    for index, phase in enumerate(brief.recommendation.phases):
         fields.append((f"recommendation.phases[{index}].duration", phase.duration))
         fields.append((f"recommendation.phases[{index}].purpose", phase.purpose))
         for criterion in phase.exit_criteria:
             fields.append((f"recommendation.phases[{index}].exit_criteria", criterion))
-    for index, item in enumerate(brief.constraints, start=1):
+    for index, item in enumerate(brief.constraints):
         fields.append((f"constraints[{index}]", item.constraint))
-    for index, item in enumerate(brief.success_measures, start=1):
+    for index, item in enumerate(brief.success_measures):
         fields.append((f"success_measures[{index}]", item.measure))
-    for index, item in enumerate(brief.risks, start=1):
+    for index, item in enumerate(brief.risks):
         fields.append((f"risks[{index}].mitigation", item.mitigation))
         fields.append((f"risks[{index}].basis", item.basis))
-    for index, item in enumerate(brief.readiness, start=1):
+    for index, item in enumerate(brief.readiness):
         fields.append((f"readiness[{index}].note", item.note))
     return fields
 
@@ -326,7 +338,7 @@ def check_brief(draft: BriefDraft, utterances: list[Utterance], retrieved: list[
     # One finding per brief field: which numbers came from reference material and which from nowhere.
     per_location: dict[str, tuple[list[str], list[str]]] = {}
     for location, text in _brief_text_fields(draft):
-        for number in numbers_in(text):
+        for number in numbers_in(text, known_passages):
             if number in transcript_numbers:
                 continue
             from_reference, from_nowhere = per_location.setdefault(location, ([], []))
