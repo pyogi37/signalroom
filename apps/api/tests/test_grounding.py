@@ -170,8 +170,8 @@ def test_check_brief_strips_invalid_citations_and_flags_numbers_by_provenance():
     assert ("invalid_citation", "medium", "readiness.UC-01") in kinds
     assert ("invalid_citation", "low", "constraints") in kinds
     assert ("unverified_number", "high", "recommendation.approach") in kinds          # 6 weeks: nowhere
-    assert ("unverified_number", "high", "recommendation.phases[1].exit_criteria") in kinds  # 5 minutes: nowhere
-    assert ("unverified_number", "medium", "success_measures[1]") in kinds          # 42%: from the vendor sheet
+    assert ("unverified_number", "high", "recommendation.phases[0].exit_criteria") in kinds  # 5 minutes: nowhere
+    assert ("unverified_number", "medium", "success_measures[0]") in kinds          # 42%: from the vendor sheet
     assert all(item.source == "code" for item in findings)
 
 
@@ -198,6 +198,30 @@ def test_numbers_present_in_transcript_are_not_flagged():
 def test_number_words_become_digits_for_the_known_number_set():
     assert number_words_to_digits("keeps thirty days, six weeks, a dozen bays, twenty-five km, two sites") == "keeps 30 days, 6 weeks, a 12 bays, 25 km, 2 sites"
     assert numbers_in(number_words_to_digits("Six weeks is what I can defend")) == ["6"]
+
+
+def test_numbers_in_ignores_passage_citations():
+    assert numbers_in("Name an owner (operational‑alert‑design#5) during Phase 1") == []
+    assert numbers_in("see [read-only-telemetry-ingestion-for-a-proof-of-con#2] and run a 48-hour shadow mode") == ["48"]
+    # An id outside the slug shape is only stripped when it was actually retrieved.
+    assert numbers_in("per pilot_notes#7") == ["7"]
+    assert numbers_in("per pilot_notes#7", ["pilot_notes#7"]) == []
+    assert numbers_in("per pilot_notes#17", ["pilot_notes#1"]) == ["17"]
+
+
+def test_check_brief_does_not_flag_citation_ids_but_still_flags_invented_numbers():
+    retrieved = [SearchHit(passage_id="operational-alert-design#5", title="Operational alert design",
+                           passage="Every alert needs a named owner who acknowledges it.", score=1.0, source="synthetic pattern library")]
+    cleaned, findings = check_brief(
+        draft(recommendation=Recommendation(approach="Escalate to a named owner (operational‑alert‑design#5)", phases=[], discussed_not_in_scope=[]),
+              risks=[Risk(title="Unowned alerts", severity="medium", mitigation="Run a 48-hour shadow mode (operational-alert-design#5)",
+                          basis="reference operational-alert-design#5")],
+              success_measures=[], readiness=[], constraints=[]),
+        UTTERANCES, retrieved,
+    )
+    numbers = [item for item in findings if item.kind == "unverified_number"]
+    assert [(item.location, item.severity) for item in numbers] == [("risks[0].mitigation", "high")]
+    assert "'48'" in numbers[0].text and "'5'" not in numbers[0].text
 
 
 def test_unicode_hyphens_and_narrow_spaces_do_not_leak_ids_or_numbers():

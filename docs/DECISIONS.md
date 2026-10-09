@@ -66,7 +66,9 @@ Each entry is a choice that could reasonably have gone another way, what was cho
 
 ## 2026-09-06 · What run 1 changed
 
-**Observed.** Ten fixtures, 119 model quotes, every one a verbatim substring of its cited line: the grounding gate never had to repair or drop anything on a real run. Injection lines were ignored 4 of 4 times, planted numbers stayed out of the brief 2 of 2 times. The misses were elsewhere: the model recorded only 3 of 8 planted contradictions, treating a correction ("eight cameras" then "five working") as resolved rather than disputed, and it wrote durations as "TBC (expected 1 to 2 weeks)", which the number check rightly flagged in every room.
+**Observed.** Ten fixtures, 119 model quotes, every one a verbatim substring of its cited line: the grounding gate never had to repair or drop anything on a real run. Injection lines were ignored 4 of 4 times, planted numbers stayed out of the brief 2 of 2 times. The misses were elsewhere: the model recorded only 3 of 8 planted contradictions, treating a correction ("eight cameras" then "five working") as resolved rather than disputed, and it wrote numbers nobody stated, mostly exit-criteria targets, which the number check flagged in six of ten rooms. One room padded durations as "TBC (expected 1 to 2 weeks)"; the check passed those because 1 and 2 appear elsewhere in that transcript.
+
+*Corrected 2026-10-09.* This entry first said the padded durations were flagged in every room. A replay of the run 1 recordings showed the current check does not flag them, and that six of the sixteen number findings it did raise came from passage citation ids such as `operational-alert-design#5` being read as numbers. The check now strips citation ids before it looks for numbers.
 
 **Choice.** Keep the gate exactly as it is even though it fired zero times on real runs. A guarantee that costs nothing when the model behaves is still a guarantee. Change the two prompts, not the checks: contradictions should explicitly include corrections and reversals, and durations must be exactly "TBC". Re-record everything as run 2 and report both runs side by side.
 

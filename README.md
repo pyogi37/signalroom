@@ -64,7 +64,7 @@ Ten synthetic discovery calls, each with gold requirements, gold open items and 
 | Latency per room, three model calls | about 31 s mean, 108 s max |
 | Cost per room at listed prices | under $0.002 |
 
-What failed, honestly: the model rarely records a contradiction when one speaker corrects another (eight cameras, then five working), and it pads "TBC" durations with estimates, which the number check flags in every room. Both are prompt problems. A second run with revised prompts was started and stopped by a provider credit limit; the changes are queued, not claimed.
+What failed, honestly: the model rarely records a contradiction when one speaker corrects another (eight cameras, then five working), and it writes numbers nobody stated, mostly exit-criteria targets such as a 90% accuracy bar, which the number check flags in six of ten rooms. Both are prompt problems. The check has a blind spot of its own: it matches a number's value, not what it counts, so the one room that padded "TBC" durations with estimates (1 to 2 weeks) passed because 1 and 2 appear elsewhere in its transcript. A second run with revised prompts was started and stopped by a provider credit limit; the changes are queued, not claimed.
 
 The grounding gate fired zero times on real runs. It is kept anyway: a guarantee that costs nothing when the model behaves is still a guarantee, and the unit tests prove it fires when the model does not.
 
