@@ -189,7 +189,8 @@ h1, h2, h3, h4 { text-wrap: balance; }
 .request-lede { margin-top: 6px; max-width: 72ch; color: var(--ink-2); font-size: 13px; line-height: 1.55; }
 .eval-line { margin-top: 8px; color: var(--ink-3); }
 
-.checks { margin-top: 16px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: var(--r-lg); background: var(--surface); overflow: hidden; }
+.checks-frame { position: relative; margin: 16px 0 1em; border: 1px solid var(--rule); border-radius: var(--r-lg); background: var(--surface); overflow: hidden; }
+.checks { margin: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .check { position: relative; display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; align-items: start; padding: 11px 14px; border-right: 1px solid var(--rule); min-width: 0; }
 .check:last-child { border-right: 0; }
 .check-icon { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; color: var(--ink-3); border: 1.5px solid var(--rule-2); margin-top: 1px; }
@@ -201,7 +202,7 @@ h1, h2, h3, h4 { text-wrap: balance; }
 .check small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-top: 2px; color: var(--ink-3); font-size: 11.5px; line-height: 1.4; overflow: hidden; }
 .check.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); }
 .check.complete .check-icon svg { stroke-width: 3; }
-.checks.resolved::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--ok); transform-origin: left; animation: sweep .6s cubic-bezier(.16,1,.3,1) both; }
+.checks-frame.resolved::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--ok); transform-origin: left; animation: sweep .6s cubic-bezier(.16,1,.3,1) both; }
 .checks { position: relative; }
 @keyframes sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
@@ -408,6 +409,6 @@ h1, h2, h3, h4 { text-wrap: balance; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pulse, .skeleton, .hunk-head.flash, .checks.resolved::after { animation: none; }
+  .pulse, .skeleton, .hunk-head.flash, .checks-frame.resolved::after { animation: none; }
   * { transition-duration: .01ms !important; }
 }
