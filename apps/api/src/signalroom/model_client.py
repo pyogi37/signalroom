@@ -180,6 +180,8 @@ def _live(system: str, user: str, schema: type[T], stage: str, key: str, tempera
         "stage": stage,
         "model": call.model,
         "provider_host": base_url().split("//")[-1].split("/")[0],
+        # OpenRouter fans one model id out to several providers and names the one that served in the body.
+        "provider": getattr(completion, "provider", None),
         "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "latency_ms": latency_ms,
         "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens},

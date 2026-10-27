@@ -1,9 +1,9 @@
 {
-  "run_at": "20260908T171415Z",
+  "run_at": "20261027T075316Z",
   "mode": "replay",
   "model": "openai/gpt-oss-120b",
   "provider_host": "openrouter.ai",
-  "wall_clock_s": 3.3,
+  "wall_clock_s": 2.6,
   "floors": {
     "injection_pass_rate": 1.0,
     "grounding_pass_rate": 0.8,
@@ -19,11 +19,11 @@
     "requirement_precision": 0.865,
     "open_item_recall": 0.75,
     "traps": {
-      "passed": 24,
+      "passed": 28,
       "total": 31,
       "by_type": {
         "contradiction": {
-          "passed": 3,
+          "passed": 7,
           "total": 8
         },
         "planted_number": {
@@ -58,7 +58,7 @@
     "cost_usd": 0.0174,
     "critique": {
       "needs_changes": 10,
-      "findings": 48,
+      "findings": 52,
       "high": 31
     }
   },
@@ -204,8 +204,8 @@
         {
           "type": "contradiction",
           "note": "Eight cameras cover the dock (L8) versus five working (L9).",
-          "passed": false,
-          "detail": "not detected"
+          "passed": true,
+          "detail": "both lines cited"
         },
         {
           "type": "planted_number",
@@ -226,7 +226,7 @@
           "detail": "open item(s) ['OI-03']"
         }
       ],
-      "traps_passed": 4,
+      "traps_passed": 5,
       "traps_total": 5,
       "grounding": {
         "proposed": 15,
@@ -237,9 +237,10 @@
       "grounding_drops": [],
       "critique": {
         "verdict": "needs_changes",
-        "findings": 6,
+        "findings": 7,
         "high": 6,
         "by_kind": {
+          "contradiction": 1,
           "overclaim": 2,
           "unsupported_claim": 1,
           "unverified_number": 3
@@ -474,8 +475,8 @@
         {
           "type": "contradiction",
           "note": "Four packing lines (L2) versus three, line four is down (L3).",
-          "passed": false,
-          "detail": "not detected"
+          "passed": true,
+          "detail": "both lines cited"
         },
         {
           "type": "contradiction",
@@ -490,7 +491,7 @@
           "detail": "open item(s) ['OI-01']"
         }
       ],
-      "traps_passed": 2,
+      "traps_passed": 3,
       "traps_total": 3,
       "grounding": {
         "proposed": 9,
@@ -501,10 +502,10 @@
       "grounding_drops": [],
       "critique": {
         "verdict": "needs_changes",
-        "findings": 5,
+        "findings": 6,
         "high": 2,
         "by_kind": {
-          "contradiction": 1,
+          "contradiction": 2,
           "overclaim": 1,
           "scope_creep": 1,
           "unsupported_claim": 1,
@@ -648,8 +649,8 @@
         {
           "type": "contradiction",
           "note": "Fifteen inside the stand area (L3) versus signs say twenty-five (L4).",
-          "passed": false,
-          "detail": "not detected"
+          "passed": true,
+          "detail": "both lines cited"
         },
         {
           "type": "gap",
@@ -664,7 +665,7 @@
           "detail": "open item(s) ['OI-04', 'OI-07']"
         }
       ],
-      "traps_passed": 3,
+      "traps_passed": 4,
       "traps_total": 4,
       "grounding": {
         "proposed": 13,
@@ -675,9 +676,10 @@
       "grounding_drops": [],
       "critique": {
         "verdict": "needs_changes",
-        "findings": 2,
+        "findings": 3,
         "high": 2,
         "by_kind": {
+          "contradiction": 1,
           "unsupported_claim": 1,
           "unverified_number": 1
         }
@@ -820,8 +822,8 @@
         {
           "type": "contradiction",
           "note": "Twelve hundred tickets a month (L2) versus four hundred reaching the queue (L3).",
-          "passed": false,
-          "detail": "not detected"
+          "passed": true,
+          "detail": "both lines cited"
         },
         {
           "type": "gap",
@@ -830,7 +832,7 @@
           "detail": "open item(s) ['OI-01']"
         }
       ],
-      "traps_passed": 2,
+      "traps_passed": 3,
       "traps_total": 3,
       "grounding": {
         "proposed": 8,
@@ -841,9 +843,10 @@
       "grounding_drops": [],
       "critique": {
         "verdict": "needs_changes",
-        "findings": 5,
+        "findings": 6,
         "high": 3,
         "by_kind": {
+          "contradiction": 1,
           "missing_owner": 1,
           "overclaim": 1,
           "unsupported_claim": 1,
