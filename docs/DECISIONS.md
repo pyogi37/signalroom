@@ -74,6 +74,28 @@ Each entry is a choice that could reasonably have gone another way, what was cho
 
 **Not done.** Relabelling gold items that the model expressed differently. Unmatched extractions are listed per fixture and reviewed by hand; the scores stay as the rubric produced them.
 
+## 2026-10-27 · What the contradiction detector changed
+
+**Observed.** Four of run 1's five missed contradictions had the same shape: a speaker corrects the previous speaker's figure on the very next line (eight cameras, then five of the eight working; four packing lines, then three; fifteen, then the signs say twenty-five; twelve hundred tickets, then four hundred). The fifth is different in kind: the gateway "is staying" at L7 against a proposal to replace it at L26, nineteen lines apart, with no figures.
+
+**Choice.** Catch the figure corrections in code instead of waiting on a prompt. `numeric_corrections()` flags two consecutive lines by different speakers when the reply opens with a different figure, or restates the earlier figure beside a new one. On the ten transcripts alone it finds those four pairs and fires nowhere else. It runs after the critique call, so the recorded prompts are unchanged and run 1's model outputs replay exactly. That isolates what the code moved from anything the model did.
+
+| Measure | Run 1 | Run 1 outputs + detector |
+|---|---|---|
+| Run | 20260908T171415Z, replay | 20261027T075316Z, replay |
+| Requirement recall / precision | 0.948 / 0.865 | 0.948 / 0.865 |
+| Open item recall | 0.75 | 0.75 |
+| Quotes verified verbatim | 119 of 119 | 119 of 119 |
+| Injection, planted number, gap | 4 of 4, 2 of 2, 15 of 17 | 4 of 4, 2 of 2, 15 of 17 |
+| Contradiction | 3 of 8 | 7 of 8 |
+| Critique findings (high) | 48 (31) | 52 (31) |
+
+The four new findings are medium-severity code checks, so no room's verdict changed.
+
+**Status.** The prompt half of the run 1 plan is still a hypothesis. Run 2 under the revised prompts could not be recorded: the OpenRouter account has never been funded (balance below zero after free usage), so a paid model call returns 402. The two prompt edits are committed on branch `run-2-prompts`, unrecorded; replay fails on that branch until a funded record run fills in its recordings.
+
+**Not done.** A detector for the Northstar kind of contradiction, a fact and a later reversal far apart; that needs meaning, not figures, and stays with the model. Corrections separated by an interjection are not caught; the check looks at consecutive lines only. The detector runs after the brief is drafted, so the brief does not yet address what it finds; move it into extraction at the next record run.
+
 ## 2026-09-06 · Local schema is versioned and rebuilt, not migrated
 
 **Choice.** `PRAGMA user_version` on the rooms database. A mismatch drops and recreates the tables.
