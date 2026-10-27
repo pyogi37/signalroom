@@ -92,7 +92,7 @@ Each entry is a choice that could reasonably have gone another way, what was cho
 | Contradiction | 3 of 8 | 7 of 8 |
 | Critique findings (high) | 48 (31) | 52 (31) |
 
-The four new findings are medium-severity code checks, so no room's verdict changed.
+The four new findings are medium-severity code checks, so no room's verdict changed. Merged with the citation-id fix to the number check, the replay on main (20261027T075823Z) keeps every number above and has 46 findings, 25 high: six false "unverified number" findings are gone.
 
 **Status.** The prompt half of the run 1 plan is still a hypothesis. Run 2 under the revised prompts could not be recorded: the OpenRouter account has never been funded (balance below zero after free usage), so a paid model call returns 402. The two prompt edits are committed on branch `run-2-prompts`, unrecorded; replay fails on that branch until a funded record run fills in its recordings.
 

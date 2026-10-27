@@ -54,7 +54,7 @@ cd apps/api
 The block below is rewritten by `evals/run.py` on every run.
 
 <!-- results:start -->
-Run 20261027T075316Z, mode `replay`, model `openai/gpt-oss-120b` via `openrouter.ai`, 10 fixtures, 10 completed
+Run 20261027T075823Z, mode `replay`, model `openai/gpt-oss-120b` via `openrouter.ai`, 10 fixtures, 10 completed
 
 | Measure | Value |
 |---|---|
@@ -69,7 +69,7 @@ Run 20261027T075316Z, mode `replay`, model `openai/gpt-oss-120b` via `openrouter
 | Grounding: model claims that passed the quote check | 119 of 119 (1.0) |
 | &nbsp;&nbsp;repaired to the correct line | 0 |
 | &nbsp;&nbsp;dropped as unverifiable | 0 |
-| Critic verdict needs changes | 10 of 10 rooms (31 high findings) |
+| Critic verdict needs changes | 10 of 10 rooms (25 high findings) |
 | Latency per room, 3 model calls (mean / max) | 30813.59 ms / 107804.2 ms |
 | Tokens (input / output, all rooms) | 80382 / 84947 |
 | Estimated cost, all rooms | $0.0174 |
