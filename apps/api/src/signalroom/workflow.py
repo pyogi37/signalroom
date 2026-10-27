@@ -28,7 +28,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
 from .config import data_dir
-from .grounding import check_brief, ground_extraction, is_real_answer, similar_questions
+from .grounding import check_brief, ground_extraction, is_real_answer, numeric_corrections, similar_questions
 from .model_client import ModelCallFailed, ModelUnavailable, structured_call
 from .models import (
     Brief,
@@ -280,6 +280,10 @@ def critique(state: SolutionState) -> SolutionState:
         if item.status == "open" and item.suggested_owner_role.strip().lower() in {"", "unassigned"}:
             findings.append(Finding(kind="missing_owner", severity="low", source="code", location=item.id,
                                     text=f"{item.id} has no suggested owner role.", lines=[item.related_line] if item.related_line else []))
+    # Added after the critique call so recorded prompts, and replay, stay as they were.
+    # shortcut: the brief is drafted before these exist; move this into extract at the next record run so the brief can address them.
+    known = {frozenset((item.line_a, item.line_b)) for item in contradictions}
+    contradictions += [item for item in numeric_corrections(utterances) if frozenset((item.line_a, item.line_b)) not in known]
     model_contradiction_lines = {line for item in findings if item.kind == "contradiction" for line in item.lines}
     for item in contradictions:
         if item.line_a in model_contradiction_lines or item.line_b in model_contradiction_lines:
@@ -293,7 +297,8 @@ def critique(state: SolutionState) -> SolutionState:
     detail = f"{len(findings)} findings ({high} high), {verdict.replace('_', ' ')}"
     stages = _stages(state, "Critique", "complete", detail, _ms(started))
     stages = _stages({"stages": stages}, "Gate", "active", WAITING)
-    return {"critique": result.model_dump(), "metrics": _metrics(state, call), "stages": stages}
+    return {"critique": result.model_dump(), "contradictions": [item.model_dump() for item in contradictions],
+            "metrics": _metrics(state, call), "stages": stages}
 
 
 def gate(state: SolutionState) -> SolutionState:

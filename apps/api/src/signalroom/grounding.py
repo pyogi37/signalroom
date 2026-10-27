@@ -345,3 +345,49 @@ def check_brief(draft: BriefDraft, utterances: list[Utterance], retrieved: list[
             text=f"In {location}: " + "; ".join(parts) + ". Numbers the customer did not state belong in TBC or as pattern guidance, not as facts.",
         ))
     return draft, findings
+
+
+_QUANTITY = re.compile(r"\b\d+(?:\.\d+)?(?: 100| 1000)?\b")
+
+
+def _quantities(text: str) -> list[float]:
+    """Cardinal figures a line states, number words folded: 'twelve hundred' -> 1200, 'twenty-five' -> 25."""
+    values = []
+    for match in _QUANTITY.finditer(number_words_to_digits(text)):
+        head, _, scale = match.group().partition(" ")
+        values.append(float(head) * (float(scale) if scale else 1))
+    return values
+
+
+def numeric_corrections(utterances: list[Utterance]) -> list[Contradiction]:
+    """A speaker answers the previous speaker's figure with a different one.
+
+    The model reads the second figure as the resolved value; this keeps both
+    lines on the record as a dispute. It fires only when the reply opens with
+    its figure ("Three lines.") or restates the earlier one beside the new one
+    ("The signs say twenty-five. Fifteen is the head-of-stand line only.").
+    shortcut: consecutive lines by different speakers only; widen the window if
+    a correction ever arrives after an interjection.
+    """
+    found = []
+    for before, after in zip(utterances, utterances[1:]):
+        if before.speaker == after.speaker or before.text.rstrip().endswith("?"):
+            continue
+        said, reply = _quantities(before.text), _quantities(after.text)
+        if not said or not reply:
+            continue
+        headline = said[0]  # the figure a correction answers is the one the line leads with
+        opens_with_figure = re.match(r"\W*\d", number_words_to_digits(after.text)) is not None
+        new = [value for value in reply if value not in said]
+        if opens_with_figure and reply[0] != headline:
+            answer = reply[0]
+        elif headline in reply and new:
+            answer = new[0]
+        else:
+            continue
+        found.append(Contradiction(
+            topic="Figures that disagree between consecutive speakers",
+            line_a=before.line, line_b=after.line,
+            note=f"{before.speaker} states {headline:g}; {after.speaker} answers with {answer:g}. Neither is confirmed.",
+        ))
+    return found

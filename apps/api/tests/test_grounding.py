@@ -1,4 +1,5 @@
-from signalroom.grounding import check_brief, ground_extraction, is_real_answer, number_words_to_digits, numbers_in, similar_questions
+from signalroom.fixtures import load_fixtures
+from signalroom.grounding import check_brief, ground_extraction, is_real_answer, number_words_to_digits, numbers_in, numeric_corrections, similar_questions
 from signalroom.models import (
     BriefDraft,
     Constraint,
@@ -223,3 +224,27 @@ def test_number_findings_are_grouped_per_location_with_word_numbers_grounded():
     assert len(numbers) == 1
     assert numbers[0].location == "snapshot.one_line_goal" and numbers[0].severity == "high"
     assert "'48'" in numbers[0].text and "'6'" not in numbers[0].text and "'30'" not in numbers[0].text
+
+
+def _corrections(fixture_id: str) -> set[tuple[int, int]]:
+    fixture = next(item for item in load_fixtures() if item.id == fixture_id)
+    return {(item.line_a, item.line_b) for item in numeric_corrections(segment(fixture.transcript))}
+
+
+def test_numeric_corrections_catch_the_run_1_misses():
+    # Run 1 missed these: a speaker corrects the previous speaker's figure on the next line.
+    assert (8, 9) in _corrections("kestrel-yard-logistics")      # eight cameras, five working
+    assert (2, 3) in _corrections("halvorsen-foods")             # four packing lines, three
+    assert (3, 4) in _corrections("orion-ground-services")       # fifteen, signs say twenty-five
+    assert (2, 3) in _corrections("pinecrest-schools")           # twelve hundred tickets, four hundred
+    # The fifth miss has no figures and sits 19 lines apart; this check does not claim it.
+    assert (7, 26) not in _corrections("northstar-cold-chain")
+
+
+def test_numeric_corrections_ignore_questions_and_agreement():
+    lines = segment(
+        "Solution engineer: Four lines, or five?\n"
+        "Plant manager: Five lines.\n"
+        "Supervisor: Five lines, all running.\n"
+    )
+    assert numeric_corrections(lines) == []
