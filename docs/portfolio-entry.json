@@ -33,7 +33,7 @@
     {"step": "Extract", "text": "Structured model output; code verifies each quote against its cited line, repairs quotes found on another line, drops the rest, and records both."},
     {"step": "Retrieve", "text": "SQLite full-text search over a synthetic pattern library; passages carry stable ids the brief can cite."},
     {"step": "Design", "text": "A brief in the working shape of a solution architecture spec; code strips citations that were not retrieved and classifies every number as customer-stated, reference-derived or invented."},
-    {"step": "Critique", "text": "Model findings merged with code findings: dropped evidence, unverified numbers, invalid citations, unaddressed contradictions."},
+    {"step": "Critique", "text": "Model findings merged with code findings: dropped evidence, unverified numbers, invalid citations, unaddressed contradictions, figures one speaker corrects on the next line."},
     {"step": "Gate", "text": "A LangGraph interrupt. Approve ends the graph; request changes returns to design with the note; follow-up answers become new attributed lines and return to extract."}
   ],
   "states": [
@@ -47,7 +47,7 @@
     {"decision": "A real LangGraph with the gate as an interrupt", "tradeoff": "A plain pipeline would be shorter and equally honest, but the workflow genuinely pauses with three exits and resumes after a restart. The original build had pass-through nodes; those were removed rather than kept as decoration."},
     {"decision": "SQLite FTS5 instead of a vector database", "tradeoff": "A few dozen passages do not justify Qdrant. The previous hash embeddings scored 'alert' and 'alerts' at zero similarity. BM25 with stemming and a two-shared-terms floor is honest at this scale, behind an interface embeddings can replace."},
     {"decision": "Record and replay model calls by content hash", "tradeoff": "Recordings are committed, so CI and the demo need no key and anyone can read which prompt produced which output. A prompt change moves the hash, so only changed stages re-record."},
-    {"decision": "Publish the failures with the scores", "tradeoff": "Contradictions were caught 3 of 8 times and every room came back needing changes. Both are in the README. Unmatched extractions count against precision rather than being relabelled."}
+    {"decision": "Publish the failures with the scores", "tradeoff": "The model caught 3 of 8 contradictions; a code check for figure corrections took that to 7 of 8 on the same output, and the miss left is a reversal with no figures. Every room still came back needing changes. Both are in the README. Unmatched extractions count against precision rather than being relabelled."}
   ],
   "architecture": {
     "stack": [
@@ -73,7 +73,7 @@
       "The evaluation plants traps: injection lines, numbers seeded in the reference library, speaker contradictions, deliberate gaps."
     ]
   },
-  "whereAIFits": "Three model calls per room: extract, design, critique, each with strict structured output. The model proposes; code decides what survives. The interesting part is not the prompts but the gates around them and the evaluation that shows where the model still fails: it treats a correction between speakers as resolved rather than disputed, and it pads unknown durations with estimates.",
+  "whereAIFits": "Three model calls per room: extract, design, critique, each with strict structured output. The model proposes; code decides what survives. The interesting part is not the prompts but the gates around them and the evaluation that shows where the model still fails: it treats a correction between speakers as resolved rather than disputed, which a code check now catches when the correction is a figure, and it writes numbers nobody stated.",
   "process": "Started from a Codex scaffold that was audited first (AUDIT.md): keyword extraction dressed as an agent, pass-through graph nodes, evals that could not fail. Rebuilt in ordered commits with Claude: retrieval, model client, the real graph, fixtures, the evaluation harness, a first live run, and check tuning from what that run exposed. Design followed the Impeccable process: product record, a direction round with alternates, a written direction contract, a fresh-context finish review, and DESIGN.md recorded from the built code.",
   "shipped": [
     "Six-stage workflow with a human gate as a LangGraph interrupt",
@@ -81,15 +81,16 @@
     "Number provenance check across the whole brief",
     "Follow-up loop where non-answers cannot close items",
     "Ten synthetic fixtures, scoring harness, CI replay from committed recordings",
-    "A published evaluation run: 0.95 requirement recall, 0.87 precision, 119 of 119 model quotes passing the verbatim check, 4 of 4 injection lines ignored, 2 of 2 planted numbers kept out, and 3 of 8 contradictions caught, which is the failure the write-up leads with",
+    "A published evaluation run: 0.95 requirement recall, 0.87 precision, 119 of 119 model quotes passing the verbatim check, 4 of 4 injection lines ignored, 2 of 2 planted numbers kept out, and contradictions caught 3 of 8 by the model, 7 of 8 once a code check for figure corrections was added",
+    "Code check for a figure one speaker corrects on the next line, kept as a dispute rather than a resolved value",
     "Recorded rooms that open with no key",
     "DOCX export of the brief",
     "Read-only MCP tools over search, rooms and evaluation results"
   ],
   "roadmap": [
-    "Run 2 of the evaluation with the revised contradiction and duration prompts (blocked on provider credits at time of writing)",
+    "Run 2 of the evaluation with the revised contradiction and duration prompts (written, unrecorded: the provider account has no credit)",
     "Streaming stage updates in the UI instead of a synchronous run",
-    "A code-side contradiction detector for numeric disagreements between speakers",
+    "Run the figure-correction check before the brief is drafted, so the brief can address what it finds",
     "More fixtures before quoting rates with confidence"
   ],
   "openQuestions": [

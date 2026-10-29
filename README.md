@@ -48,9 +48,9 @@ To analyse a new transcript you need a key. Copy `.env.example` to `apps/api/.en
 
 ## Evaluation results
 
-Ten synthetic discovery calls, each with gold requirements, gold open items and planted traps, run through `openai/gpt-oss-120b` via OpenRouter and replayed from committed recordings. Full method, per-fixture rows and the failure list are in [docs/evaluation.md](docs/evaluation.md).
+Ten synthetic discovery calls, each with gold requirements, gold open items and planted traps, run once through `openai/gpt-oss-120b` via OpenRouter (run 1) and replayed from the committed recordings through the current code checks. Full method, per-fixture rows and the failure list are in [docs/evaluation.md](docs/evaluation.md).
 
-| Measure | Run 1 |
+| Measure | Latest replay |
 |---|---|
 | Requirement recall / precision (mean) | 0.95 / 0.87 |
 | Open item recall (mean) | 0.75 |
@@ -58,13 +58,13 @@ Ten synthetic discovery calls, each with gold requirements, gold open items and 
 | Injection lines ignored | 4 of 4 |
 | Planted numbers kept out of the brief | 2 of 2 |
 | Gaps kept open | 15 of 17 |
-| Contradictions surfaced | 3 of 8 |
+| Contradictions surfaced | 7 of 8 (3 of 8 before the code check for figure corrections) |
 | Vague follow-up answers kept open / definite answers closed | 6 of 6 / 5 of 6 |
 | Rooms the critic sent back | 10 of 10 |
 | Latency per room, three model calls | about 31 s mean, 108 s max |
 | Cost per room at listed prices | under $0.002 |
 
-What failed, honestly: the model rarely records a contradiction when one speaker corrects another (eight cameras, then five working), and it writes numbers nobody stated, mostly exit-criteria targets such as a 90% accuracy bar, which the number check flags in six of ten rooms. Both are prompt problems. The check has a blind spot of its own: it matches a number's value, not what it counts, so the one room that padded "TBC" durations with estimates (1 to 2 weeks) passed because 1 and 2 appear elsewhere in its transcript. A second run with revised prompts was started and stopped by a provider credit limit; the changes are queued, not claimed.
+What failed, honestly: the model rarely records a contradiction when one speaker corrects another (eight cameras, then five working). A code check now catches the four of those that turn on a figure, measured on the same model output; the fifth, a gateway that is "staying" and is then proposed for replacement nineteen lines later, is still missed. The model also writes numbers nobody stated, mostly exit-criteria targets such as a 90% accuracy bar, which the number check flags in six of ten rooms. The check has a blind spot of its own: it matches a number's value, not what it counts, so the one room that padded "TBC" durations with estimates (1 to 2 weeks) passed because 1 and 2 appear elsewhere in its transcript. Revised prompts for both problems are written but unrecorded, because the provider account has no credit, so their effect is not claimed.
 
 The grounding gate fired zero times on real runs. It is kept anyway: a guarantee that costs nothing when the model behaves is still a guarantee, and the unit tests prove it fires when the model does not.
 
@@ -75,7 +75,7 @@ The workspace is "The Review Request": the brief as a pull request against the t
 ## Architecture and decisions
 
 - [docs/architecture.md](docs/architecture.md): the shape, the trust model, what was left out on purpose.
-- [docs/DECISIONS.md](docs/DECISIONS.md): each non-obvious choice with its alternative and cost, including why FTS5 beat a vector database here, why the graph kept LangGraph, and what run 1 changed.
+- [docs/DECISIONS.md](docs/DECISIONS.md): each non-obvious choice with its alternative and cost, including why FTS5 beat a vector database here, why the graph kept LangGraph, what run 1 changed, and what the contradiction detector changed.
 - [AUDIT.md](AUDIT.md): the audit of the original build that this work started from. That build is preserved on the `codex-initial-build` branch.
 - [docs/deployment.md](docs/deployment.md): how the public demo is hosted, and what it deliberately does not have.
 
@@ -84,7 +84,7 @@ Stack: FastAPI, LangGraph with a SQLite checkpointer, Pydantic strict-schema str
 ## Limitations
 
 - Synchronous runs: a live room takes twenty seconds to two minutes depending on the provider route, with no streaming.
-- The contradiction detector is the model; code only checks that cited lines exist.
+- Contradictions come from the model, plus one code check for a figure a speaker corrects on the next line. That check was written after seeing run 1's misses and is scored on the same fixtures. A reversal far apart, or one without figures, still depends on the model.
 - Ten fixtures is enough to show the failure modes, not to estimate rates with confidence.
 - No authentication, no multi-tenant rooms, no hosted deployment. Local demo state is rebuilt, not migrated.
 - The read-only MCP server exposes search, rooms and evaluation results; approval is never exposed.

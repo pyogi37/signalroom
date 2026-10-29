@@ -20,7 +20,7 @@ The portfolio claim is narrow and measurable: the brief never says something the
 
 ## Positioning
 
-Every requirement in the brief carries a quote that code has verified is an exact substring of a numbered transcript line, attributed to the speaker who said it. Anything the model proposes that fails that check is dropped and the drop is shown, not hidden. A second model pass reads the brief against the transcript and flags unsupported numbers, contradictions between speakers, and missing owners. An evaluation suite over labelled synthetic transcripts with planted traps reports recall, precision, grounding, trap pass rate, latency and token cost, and its failures are published alongside its scores. Approval is a real interrupt in the workflow, not a status flag.
+Every requirement in the brief carries a quote that code has verified is an exact substring of a numbered transcript line, attributed to the speaker who said it. Anything the model proposes that fails that check is dropped and the drop is shown, not hidden. A second model pass reads the brief against the transcript and flags unsupported numbers, contradictions between speakers, and missing owners; code separately flags a figure one speaker corrects on the next line. An evaluation suite over labelled synthetic transcripts with planted traps reports recall, precision, grounding, trap pass rate, latency and token cost, and its failures are published alongside its scores. Approval is a real interrupt in the workflow, not a status flag.
 
 ## Operating Context
 

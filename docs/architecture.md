@@ -45,7 +45,8 @@ design     model → SAS-style brief (snapshot, readiness, constraints, phases,
    ▼
 critique   model → findings and verdict
    │        code → merge: dropped evidence, unverified numbers, invalid citations,
-   │               unaddressed contradictions, missing owners
+   │               unaddressed contradictions, figures one speaker corrects
+   │               on the next line, missing owners
    ▼
 gate       LangGraph interrupt. Human decision resumes the thread:
              approve          → END
