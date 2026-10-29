@@ -89,7 +89,8 @@ function Checks({ stages, running, resolved }: { stages: StageRecord[]; running:
     const active = strip.current?.querySelector<HTMLElement>('.check.active, .check.failed')
     if (strip.current && active) strip.current.scrollLeft = Math.max(0, active.offsetLeft - strip.current.clientWidth / 2 + active.clientWidth / 2)
   }, [stages, running])
-  return <ol className={`checks ${resolved ? 'resolved' : ''}`} ref={strip} aria-label="Workflow checks">
+  // The frame does not scroll, so the approval rule spans what is visible even when the strip is scrolled.
+  return <div className={`checks-frame ${resolved ? 'resolved' : ''}`}><ol className="checks" ref={strip} aria-label="Workflow checks">
     {ORDER.map((name, index) => {
       const stage = byName.get(name)
       const status = running ? (index === 0 ? 'active' : 'pending') : stage?.status ?? 'pending'
@@ -102,7 +103,7 @@ function Checks({ stages, running, resolved }: { stages: StageRecord[]; running:
         </span>
       </li>
     })}
-  </ol>
+  </ol></div>
 }
 
 export { statusLabel }
